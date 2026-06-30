@@ -31,6 +31,11 @@ export default function NavBar() {
         <span style={{ color: '#9ca3af', fontSize: 13 }}>· Ladakh trips</span>
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 }}>
+          {user && (
+            <Link to="/bookings" style={{ color: '#2563eb', textDecoration: 'none' }}>
+              My bookings
+            </Link>
+          )}
           {user?.role === 'ADMIN' && (
             <Link to="/admin" style={{ color: '#2563eb', textDecoration: 'none' }}>
               Admin

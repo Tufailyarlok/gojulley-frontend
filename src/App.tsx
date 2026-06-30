@@ -4,6 +4,7 @@ import NavBar from './components/NavBar'
 import ListingsPage from './pages/ListingsPage'
 import LoginPage from './pages/LoginPage'
 import AdminPage from './pages/AdminPage'
+import BookingsPage from './pages/BookingsPage'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
           <Route path="/" element={<ListingsPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin" element={<AdminPage />} />
+          <Route path="/bookings" element={<BookingsPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
