@@ -3,7 +3,9 @@
 
 import type { Booking, Listing, ListingType } from './types'
 
-const BASE = '/api/v1'
+// Local dev: VITE_API_URL is unset, so calls go to '/api/v1' (Vite proxy).
+// Production: set VITE_API_URL to the backend's public URL at build time.
+const BASE = (import.meta.env.VITE_API_URL ?? '') + '/api/v1'
 
 export interface AuthUser {
   token: string
