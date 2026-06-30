@@ -5,11 +5,11 @@ import { useAuth } from '../auth'
 import BookingModal from '../components/BookingModal'
 import type { Listing, ListingType } from '../types'
 
-const TYPE_META: Record<ListingType, { label: string; emoji: string }> = {
-  HOTEL: { label: 'Hotels', emoji: '🏨' },
-  HOMESTAY: { label: 'Homestays', emoji: '🏡' },
-  CAR: { label: 'Cars / Taxi', emoji: '🚕' },
-  BIKE: { label: 'Bikes', emoji: '🏍️' },
+const TYPE_META: Record<ListingType, { label: string; tint: string; ink: string }> = {
+  HOTEL: { label: 'Hotels', tint: '#eff6ff', ink: '#1d4ed8' },
+  HOMESTAY: { label: 'Homestays', tint: '#ecfdf5', ink: '#047857' },
+  CAR: { label: 'Cars / Taxi', tint: '#fffbeb', ink: '#b45309' },
+  BIKE: { label: 'Bikes', tint: '#fdf4ff', ink: '#a21caf' },
 }
 
 type Filter = 'ALL' | ListingType
@@ -76,17 +76,9 @@ export default function ListingsPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 999,
-                border: `1px solid ${active ? '#2563eb' : '#d1d5db'}`,
-                background: active ? '#2563eb' : '#fff',
-                color: active ? '#fff' : '#374151',
-                cursor: 'pointer',
-                fontSize: 14,
-              }}
+              className={`filter-pill${active ? ' active' : ''}`}
             >
-              {f === 'ALL' ? 'All' : `${TYPE_META[f].emoji} ${TYPE_META[f].label}`}
+              {f === 'ALL' ? 'All' : TYPE_META[f].label}
             </button>
           )
         })}
@@ -98,14 +90,17 @@ export default function ListingsPage() {
       {!loading && !error && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 16 }}>
           {visible.map((l) => (
-            <article
-              key={l.id}
-              style={{ border: '1px solid #e5e7eb', borderRadius: 12, padding: 16, background: '#fff', display: 'flex', flexDirection: 'column' }}
-            >
-              <div style={{ fontSize: 13, color: '#6b7280' }}>
-                {TYPE_META[l.type].emoji} {l.location}
+            <article key={l.id} className="listing-card">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                <span
+                  className="type-badge"
+                  style={{ background: TYPE_META[l.type].tint, color: TYPE_META[l.type].ink }}
+                >
+                  {TYPE_META[l.type].label}
+                </span>
+                <span style={{ fontSize: 13, color: '#9ca3af' }}>{l.location}</span>
               </div>
-              <h3 style={{ margin: '6px 0' }}>{l.title}</h3>
+              <h3 style={{ margin: '10px 0 4px', fontSize: 17 }}>{l.title}</h3>
               <p style={{ fontSize: 14, color: '#4b5563', minHeight: 40, margin: '0 0 12px' }}>{l.description}</p>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 'auto' }}>
                 <strong>
@@ -116,20 +111,7 @@ export default function ListingsPage() {
                   {l.quantity > 0 ? `${l.quantity} available` : 'sold out'}
                 </span>
               </div>
-              <button
-                onClick={() => onBook(l)}
-                disabled={l.quantity === 0}
-                style={{
-                  marginTop: 12,
-                  padding: '8px 0',
-                  borderRadius: 8,
-                  border: 'none',
-                  background: l.quantity === 0 ? '#e5e7eb' : '#2563eb',
-                  color: l.quantity === 0 ? '#9ca3af' : '#fff',
-                  cursor: l.quantity === 0 ? 'not-allowed' : 'pointer',
-                  fontSize: 14,
-                }}
-              >
+              <button onClick={() => onBook(l)} disabled={l.quantity === 0} className="book-btn">
                 {l.quantity === 0 ? 'Sold out' : 'Book'}
               </button>
             </article>
