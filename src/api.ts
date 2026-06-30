@@ -12,6 +12,11 @@ export interface AuthUser {
   role: 'CUSTOMER' | 'ADMIN'
 }
 
+export interface SignupResponse {
+  email: string
+  message: string
+}
+
 export interface NewListing {
   type: ListingType
   title: string
@@ -28,11 +33,20 @@ export interface NewBooking {
   quantity: number
 }
 
+// Error that also carries the HTTP status, so callers can branch on it
+// (e.g. login -> 403 means "email not verified").
+export class ApiError extends Error {
+  status: number
+  constructor(message: string, status: number) {
+    super(message)
+    this.status = status
+  }
+}
+
 function authHeaders(token: string) {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 }
 
-// Shared response handler: throws a useful error if the call failed.
 async function handle<T>(res: Response): Promise<T> {
   if (!res.ok) {
     let msg = `Request failed (HTTP ${res.status})`
@@ -42,10 +56,12 @@ async function handle<T>(res: Response): Promise<T> {
     } catch {
       /* no JSON body */
     }
-    throw new Error(msg)
+    throw new ApiError(msg, res.status)
   }
   return res.json() as Promise<T>
 }
+
+const jsonHeaders = { 'Content-Type': 'application/json' }
 
 export async function getListings(params?: {
   location?: string
@@ -62,39 +78,51 @@ export async function login(email: string, password: string): Promise<AuthUser> 
   return handle<AuthUser>(
     await fetch(`${BASE}/auth/login`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({ email, password }),
     }),
   )
 }
 
-export async function signup(email: string, password: string, name: string): Promise<AuthUser> {
-  return handle<AuthUser>(
+export async function signup(email: string, password: string, name: string): Promise<SignupResponse> {
+  return handle<SignupResponse>(
     await fetch(`${BASE}/auth/signup`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders,
       body: JSON.stringify({ email, password, name }),
+    }),
+  )
+}
+
+export async function verifyOtp(email: string, code: string): Promise<AuthUser> {
+  return handle<AuthUser>(
+    await fetch(`${BASE}/auth/verify-otp`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ email, code }),
+    }),
+  )
+}
+
+export async function resendOtp(email: string): Promise<SignupResponse> {
+  return handle<SignupResponse>(
+    await fetch(`${BASE}/auth/resend-otp`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ email }),
     }),
   )
 }
 
 export async function createListing(token: string, data: NewListing): Promise<Listing> {
   return handle<Listing>(
-    await fetch(`${BASE}/listings`, {
-      method: 'POST',
-      headers: authHeaders(token),
-      body: JSON.stringify(data),
-    }),
+    await fetch(`${BASE}/listings`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
   )
 }
 
 export async function createBooking(token: string, data: NewBooking): Promise<Booking> {
   return handle<Booking>(
-    await fetch(`${BASE}/bookings`, {
-      method: 'POST',
-      headers: authHeaders(token),
-      body: JSON.stringify(data),
-    }),
+    await fetch(`${BASE}/bookings`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
   )
 }
 

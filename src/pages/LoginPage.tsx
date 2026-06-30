@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login as apiLogin, signup as apiSignup } from '../api'
+import { ApiError, login as apiLogin, signup as apiSignup } from '../api'
 import { useAuth } from '../auth'
 
 const input = {
@@ -28,12 +28,21 @@ export default function LoginPage() {
     setError(null)
     setBusy(true)
     try {
-      const user =
-        mode === 'login' ? await apiLogin(email, password) : await apiSignup(email, password, name)
-      setUser(user)
-      navigate(user.role === 'ADMIN' ? '/admin' : '/')
+      if (mode === 'signup') {
+        await apiSignup(email, password, name)
+        navigate('/verify', { state: { email } }) // go enter the emailed code
+      } else {
+        const user = await apiLogin(email, password)
+        setUser(user)
+        navigate(user.role === 'ADMIN' ? '/admin' : '/')
+      }
     } catch (err) {
-      setError((err as Error).message)
+      // Logging into an unverified account returns 403 -> send them to verify.
+      if (mode === 'login' && err instanceof ApiError && err.status === 403) {
+        navigate('/verify', { state: { email } })
+      } else {
+        setError((err as Error).message)
+      }
     } finally {
       setBusy(false)
     }
