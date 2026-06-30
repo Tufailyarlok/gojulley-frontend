@@ -55,7 +55,7 @@ export default function BookingModal({
         </p>
 
         <form onSubmit={submit}>
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div className="form-row">
             <label className="label" style={{ flex: 1 }}>
               Check-in
               <input className="field" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />

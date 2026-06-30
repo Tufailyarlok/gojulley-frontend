@@ -88,7 +88,7 @@ export default function AdminPage() {
           />
         </label>
 
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="form-row">
           <label className="label" style={{ flex: 1 }}>
             Price / day (₹)
             <input

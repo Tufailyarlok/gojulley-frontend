@@ -231,6 +231,10 @@ button {
   color: var(--ink-soft);
   margin-bottom: 12px;
 }
+.form-row {
+  display: flex;
+  gap: 12px;
+}
 
 /* ============ Buttons ============ */
 .btn {
@@ -442,6 +446,60 @@ button {
 @keyframes pop {
   from { opacity: 0; transform: translateY(8px) scale(0.98); }
   to { opacity: 1; transform: none; }
+}
+
+/* ============ Mobile (mweb) ============ */
+@media (max-width: 640px) {
+  .nav-inner {
+    padding: 10px 14px;
+    gap: 10px;
+    flex-wrap: wrap; /* fallback: actions wrap below instead of overflowing */
+  }
+  .brand {
+    font-size: 16px;
+    min-width: 0; /* allow the brand to shrink rather than force overflow */
+  }
+  .brand-sub {
+    display: none; /* "· Ladakh trips" — drop on mobile to save room */
+  }
+  .nav-actions {
+    gap: 14px;
+    font-size: 14px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .nav-user {
+    display: none; /* "name (role)" text was pushing Log out off-screen */
+  }
+
+  .page {
+    padding: 1.25rem 1rem 2.5rem;
+  }
+
+  .hero {
+    padding: 30px 22px 50px;
+    border-radius: 16px;
+  }
+  .hero h1 {
+    font-size: 25px;
+  }
+  .hero p {
+    font-size: 14px;
+  }
+  .hero::after {
+    height: 64px;
+    background-size: 100% 64px;
+  }
+
+  /* Stack side-by-side fields (dates, price/qty) */
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .modal-card {
+    padding: 20px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
