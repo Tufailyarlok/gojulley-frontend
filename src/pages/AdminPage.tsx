@@ -6,17 +6,8 @@ import type { ListingType } from '../types'
 
 const TYPES: ListingType[] = ['HOTEL', 'HOMESTAY', 'CAR', 'BIKE']
 
-const input = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: 8,
-  border: '1px solid #d1d5db',
-  marginTop: 4,
-  fontSize: 14,
-} as const
-
 function Gate({ children }: { children: ReactNode }) {
-  return <div style={{ maxWidth: 600, margin: '3rem auto', padding: '0 1rem', color: '#4b5563' }}>{children}</div>
+  return <div style={{ maxWidth: 600, margin: '3rem auto', padding: '0 1rem', color: 'var(--muted)' }}>{children}</div>
 }
 
 export default function AdminPage() {
@@ -61,15 +52,15 @@ export default function AdminPage() {
   }
 
   return (
-    <div style={{ maxWidth: 520, margin: '2rem auto', padding: '0 1rem' }}>
-      <h2 style={{ marginTop: 0 }}>Add a listing</h2>
-      <p style={{ color: '#6b7280', marginTop: 4 }}>Add Ladakh inventory — a hotel, homestay, car, or bike.</p>
+    <div style={{ maxWidth: 560, margin: '2rem auto', padding: '0 1rem' }}>
+      <h2 className="section-title" style={{ marginTop: 0 }}>Add a listing</h2>
+      <p className="section-sub" style={{ marginBottom: 18 }}>Add Ladakh inventory — a hotel, homestay, car, or bike.</p>
 
-      <form onSubmit={submit} style={{ marginTop: 16 }}>
-        <label style={{ display: 'block', marginBottom: 12, fontSize: 14 }}>
+      <form onSubmit={submit} className="card">
+        <label className="label">
           Type
           <select
-            style={input}
+            className="field"
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value as ListingType })}
           >
@@ -81,15 +72,15 @@ export default function AdminPage() {
           </select>
         </label>
 
-        <label style={{ display: 'block', marginBottom: 12, fontSize: 14 }}>
+        <label className="label">
           Title
-          <input style={input} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+          <input className="field" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
         </label>
 
-        <label style={{ display: 'block', marginBottom: 12, fontSize: 14 }}>
+        <label className="label">
           Location
           <input
-            style={input}
+            className="field"
             value={form.location}
             onChange={(e) => setForm({ ...form, location: e.target.value })}
             placeholder="Leh, Nubra, Pangong…"
@@ -98,10 +89,10 @@ export default function AdminPage() {
         </label>
 
         <div style={{ display: 'flex', gap: 12 }}>
-          <label style={{ display: 'block', marginBottom: 12, fontSize: 14, flex: 1 }}>
+          <label className="label" style={{ flex: 1 }}>
             Price / day (₹)
             <input
-              style={input}
+              className="field"
               type="number"
               min={1}
               value={form.pricePerDay}
@@ -109,10 +100,10 @@ export default function AdminPage() {
               required
             />
           </label>
-          <label style={{ display: 'block', marginBottom: 12, fontSize: 14, flex: 1 }}>
+          <label className="label" style={{ flex: 1 }}>
             Quantity
             <input
-              style={input}
+              className="field"
               type="number"
               min={0}
               value={form.quantity}
@@ -122,31 +113,20 @@ export default function AdminPage() {
           </label>
         </div>
 
-        <label style={{ display: 'block', marginBottom: 16, fontSize: 14 }}>
+        <label className="label">
           Description
           <textarea
-            style={{ ...input, minHeight: 70 }}
+            className="field"
+            style={{ minHeight: 80, resize: 'vertical' }}
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
         </label>
 
-        {msg && <p style={{ color: '#059669', fontSize: 14 }}>{msg}</p>}
-        {error && <p style={{ color: 'crimson', fontSize: 14 }}>{error}</p>}
+        {msg && <p className="alert alert-success" style={{ marginBottom: 14 }}>{msg}</p>}
+        {error && <p className="alert alert-error" style={{ marginBottom: 14 }}>{error}</p>}
 
-        <button
-          type="submit"
-          disabled={busy}
-          style={{
-            padding: '10px 18px',
-            borderRadius: 8,
-            border: 'none',
-            background: '#2563eb',
-            color: '#fff',
-            fontSize: 15,
-            cursor: 'pointer',
-          }}
-        >
+        <button type="submit" disabled={busy} className="btn btn-primary">
           {busy ? 'Saving…' : 'Add listing'}
         </button>
       </form>

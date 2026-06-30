@@ -1,57 +1,41 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth'
 
-const btn = {
-  padding: '4px 12px',
-  borderRadius: 6,
-  border: '1px solid #d1d5db',
-  background: '#fff',
-  cursor: 'pointer',
-  fontSize: 14,
-} as const
-
 export default function NavBar() {
   const { user, logout } = useAuth()
 
   return (
-    <nav style={{ borderBottom: '1px solid #e5e7eb', background: '#fff' }}>
-      <div
-        style={{
-          maxWidth: 1000,
-          margin: '0 auto',
-          padding: '12px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 12,
-        }}
-      >
-        <Link to="/" style={{ fontWeight: 700, textDecoration: 'none', color: '#111827', fontSize: 18 }}>
+    <nav className="nav">
+      <div className="nav-inner">
+        <Link to="/" className="brand">
+          <span className="brand-mark">G</span>
           GoJulley
         </Link>
-        <span style={{ color: '#9ca3af', fontSize: 13 }}>· Ladakh trips</span>
+        <span className="brand-sub">· Ladakh trips</span>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12, fontSize: 14 }}>
+        <span className="nav-spacer" />
+        <div className="nav-actions">
           {user && (
-            <Link to="/bookings" style={{ color: '#2563eb', textDecoration: 'none' }}>
+            <Link to="/bookings" className="nav-link">
               My bookings
             </Link>
           )}
           {user?.role === 'ADMIN' && (
-            <Link to="/admin" style={{ color: '#2563eb', textDecoration: 'none' }}>
+            <Link to="/admin" className="nav-link">
               Admin
             </Link>
           )}
           {user ? (
             <>
-              <span style={{ color: '#6b7280' }}>
+              <span className="nav-user">
                 {user.name} ({user.role.toLowerCase()})
               </span>
-              <button onClick={logout} style={btn}>
+              <button onClick={logout} className="btn btn-outline" style={{ padding: '6px 14px' }}>
                 Log out
               </button>
             </>
           ) : (
-            <Link to="/login" style={{ color: '#2563eb', textDecoration: 'none' }}>
+            <Link to="/login" className="nav-link">
               Log in
             </Link>
           )}

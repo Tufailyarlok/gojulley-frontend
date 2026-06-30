@@ -4,10 +4,10 @@ import { cancelBooking, createPaymentOrder, getMyBookings, verifyPayment } from 
 import { useAuth } from '../auth'
 import type { Booking } from '../types'
 
-const statusColor: Record<Booking['status'], string> = {
-  PENDING: '#b45309',
-  CONFIRMED: '#059669',
-  CANCELLED: '#9ca3af',
+const statusBadge: Record<Booking['status'], string> = {
+  PENDING: 'badge badge-pending',
+  CONFIRMED: 'badge badge-confirmed',
+  CANCELLED: 'badge badge-cancelled',
 }
 
 // Load Razorpay's checkout script on demand (once).
@@ -126,12 +126,12 @@ export default function BookingsPage() {
 
   return (
     <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <h2 style={{ marginTop: 0 }}>My bookings</h2>
+      <h2 className="section-title" style={{ marginTop: 0, marginBottom: 18 }}>My bookings</h2>
 
-      {loading && <p>Loading…</p>}
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
+      {loading && <p style={{ color: 'var(--muted)' }}>Loading…</p>}
+      {error && <div className="alert alert-error" style={{ marginBottom: 14 }}>{error}</div>}
       {!loading && bookings.length === 0 && (
-        <p style={{ color: '#6b7280' }}>
+        <p style={{ color: 'var(--muted)' }}>
           No bookings yet. <Link to="/">Browse listings →</Link>
         </p>
       )}
@@ -140,41 +140,34 @@ export default function BookingsPage() {
         {bookings.map((b) => (
           <div
             key={b.id}
+            className="card"
             style={{
-              border: '1px solid #e5e7eb',
-              borderRadius: 10,
-              padding: 16,
+              padding: 18,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               gap: 12,
-              background: '#fff',
+              flexWrap: 'wrap',
             }}
           >
             <div>
-              <strong>{b.listingTitle}</strong>
-              <div style={{ fontSize: 14, color: '#6b7280' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <strong style={{ fontSize: 15 }}>{b.listingTitle}</strong>
+                <span className={statusBadge[b.status]}>{b.status}</span>
+              </div>
+              <div style={{ fontSize: 14, color: 'var(--muted)', marginTop: 4 }}>
                 {b.startDate} → {b.endDate} · {b.quantity} unit(s) · ₹{b.totalPrice.toLocaleString('en-IN')}
               </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: statusColor[b.status] }}>{b.status}</span>
             </div>
 
             <div style={{ display: 'flex', gap: 8 }}>
               {b.status === 'PENDING' && (
-                <button
-                  onClick={() => onPay(b)}
-                  disabled={busyId === b.id}
-                  style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 14 }}
-                >
+                <button onClick={() => onPay(b)} disabled={busyId === b.id} className="btn btn-primary">
                   {busyId === b.id ? 'Processing…' : `Pay ₹${b.totalPrice.toLocaleString('en-IN')}`}
                 </button>
               )}
               {b.status !== 'CANCELLED' && (
-                <button
-                  onClick={() => onCancel(b.id)}
-                  disabled={busyId === b.id}
-                  style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid #dc2626', background: '#fff', color: '#dc2626', cursor: 'pointer', fontSize: 14 }}
-                >
+                <button onClick={() => onCancel(b.id)} disabled={busyId === b.id} className="btn btn-danger">
                   Cancel
                 </button>
               )}

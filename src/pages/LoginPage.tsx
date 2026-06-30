@@ -3,15 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { ApiError, login as apiLogin, signup as apiSignup } from '../api'
 import { useAuth } from '../auth'
 
-const input = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: 8,
-  border: '1px solid #d1d5db',
-  marginTop: 4,
-  fontSize: 14,
-} as const
-
 export default function LoginPage() {
   const { setUser } = useAuth()
   const navigate = useNavigate()
@@ -49,66 +40,58 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: 380, margin: '3rem auto', padding: '0 1rem' }}>
-      <h2>{mode === 'login' ? 'Log in' : 'Create account'}</h2>
+    <div style={{ maxWidth: 420, margin: '3.5rem auto', padding: '0 1rem' }}>
+      <div className="card">
+        <h2 style={{ marginTop: 0, marginBottom: 4 }}>{mode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
+        <p className="section-sub" style={{ marginBottom: 20 }}>
+          {mode === 'login' ? 'Log in to manage your Ladakh bookings.' : 'Sign up to start booking stays and rides.'}
+        </p>
 
-      <form onSubmit={submit}>
-        {mode === 'signup' && (
-          <label style={{ display: 'block', marginBottom: 12, fontSize: 14 }}>
-            Name
-            <input style={input} value={name} onChange={(e) => setName(e.target.value)} required />
+        <form onSubmit={submit}>
+          {mode === 'signup' && (
+            <label className="label">
+              Name
+              <input className="field" value={name} onChange={(e) => setName(e.target.value)} required />
+            </label>
+          )}
+          <label className="label">
+            Email
+            <input className="field" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </label>
-        )}
-        <label style={{ display: 'block', marginBottom: 12, fontSize: 14 }}>
-          Email
-          <input style={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </label>
-        <label style={{ display: 'block', marginBottom: 16, fontSize: 14 }}>
-          Password
-          <input
-            style={input}
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </label>
+          <label className="label" style={{ marginBottom: 18 }}>
+            Password
+            <input
+              className="field"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </label>
 
-        {error && <p style={{ color: 'crimson', fontSize: 14 }}>{error}</p>}
+          {error && <p className="alert alert-error" style={{ marginBottom: 14 }}>{error}</p>}
 
-        <button
-          type="submit"
-          disabled={busy}
-          style={{
-            width: '100%',
-            padding: 10,
-            borderRadius: 8,
-            border: 'none',
-            background: '#2563eb',
-            color: '#fff',
-            fontSize: 15,
-            cursor: 'pointer',
-          }}
-        >
-          {busy ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
-        </button>
-      </form>
+          <button type="submit" disabled={busy} className="btn btn-primary btn-block">
+            {busy ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
+          </button>
+        </form>
 
-      <p style={{ fontSize: 14, marginTop: 16, color: '#6b7280' }}>
-        {mode === 'login' ? "No account? " : 'Have an account? '}
-        <button
-          onClick={() => {
-            setMode(mode === 'login' ? 'signup' : 'login')
-            setError(null)
-          }}
-          style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: 0, fontSize: 14 }}
-        >
-          {mode === 'login' ? 'Sign up' : 'Log in'}
-        </button>
-      </p>
+        <p style={{ fontSize: 14, marginTop: 18, color: 'var(--muted)' }}>
+          {mode === 'login' ? "No account? " : 'Have an account? '}
+          <button
+            className="btn-link"
+            onClick={() => {
+              setMode(mode === 'login' ? 'signup' : 'login')
+              setError(null)
+            }}
+          >
+            {mode === 'login' ? 'Sign up' : 'Log in'}
+          </button>
+        </p>
+      </div>
 
-      <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 24 }}>
-        Demo admin: admin@tripstack.local / admin123
+      <p style={{ fontSize: 12, color: 'var(--faint)', marginTop: 16, textAlign: 'center' }}>
+        Demo admin · admin@tripstack.local / admin123
       </p>
     </div>
   )

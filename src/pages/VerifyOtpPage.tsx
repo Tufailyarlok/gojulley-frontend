@@ -3,17 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { resendOtp, verifyOtp } from '../api'
 import { useAuth } from '../auth'
 
-const input = {
-  width: '100%',
-  padding: '10px 12px',
-  borderRadius: 8,
-  border: '1px solid #d1d5db',
-  marginTop: 4,
-  fontSize: 18,
-  letterSpacing: 4,
-  textAlign: 'center' as const,
-}
-
 export default function VerifyOtpPage() {
   const { setUser } = useAuth()
   const navigate = useNavigate()
@@ -60,51 +49,34 @@ export default function VerifyOtpPage() {
   }
 
   return (
-    <div style={{ maxWidth: 380, margin: '3rem auto', padding: '0 1rem' }}>
-      <h2>Verify your email</h2>
-      <p style={{ color: '#6b7280', fontSize: 14 }}>
-        We sent a 6-digit code to <strong>{email}</strong>. Enter it below.
-      </p>
+    <div style={{ maxWidth: 420, margin: '3.5rem auto', padding: '0 1rem' }}>
+      <div className="card">
+        <h2 style={{ marginTop: 0, marginBottom: 4 }}>Verify your email</h2>
+        <p className="section-sub" style={{ marginBottom: 20 }}>
+          We sent a 6-digit code to <strong style={{ color: 'var(--ink)' }}>{email}</strong>.
+        </p>
 
-      <form onSubmit={submit}>
-        <input
-          style={input}
-          value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-          inputMode="numeric"
-          placeholder="••••••"
-          required
-        />
-        {error && <p style={{ color: 'crimson', fontSize: 14 }}>{error}</p>}
-        {info && <p style={{ color: '#059669', fontSize: 14 }}>{info}</p>}
-        <button
-          type="submit"
-          disabled={busy || code.length < 6}
-          style={{
-            width: '100%',
-            padding: 10,
-            marginTop: 12,
-            borderRadius: 8,
-            border: 'none',
-            background: busy || code.length < 6 ? '#93c5fd' : '#2563eb',
-            color: '#fff',
-            fontSize: 15,
-            cursor: busy || code.length < 6 ? 'default' : 'pointer',
-          }}
-        >
-          {busy ? 'Verifying…' : 'Verify'}
-        </button>
-      </form>
+        <form onSubmit={submit}>
+          <input
+            className="field"
+            style={{ fontSize: 24, letterSpacing: 8, textAlign: 'center', fontWeight: 600 }}
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            inputMode="numeric"
+            placeholder="••••••"
+            required
+          />
+          {error && <p className="alert alert-error" style={{ marginTop: 12 }}>{error}</p>}
+          {info && <p className="alert alert-success" style={{ marginTop: 12 }}>{info}</p>}
+          <button type="submit" disabled={busy || code.length < 6} className="btn btn-primary btn-block" style={{ marginTop: 16 }}>
+            {busy ? 'Verifying…' : 'Verify'}
+          </button>
+        </form>
 
-      <p style={{ fontSize: 14, marginTop: 16, color: '#6b7280' }}>
-        Didn’t get it?{' '}
-        <button
-          onClick={onResend}
-          style={{ background: 'none', border: 'none', color: '#2563eb', cursor: 'pointer', padding: 0, fontSize: 14 }}
-        >
-          Resend code
-        </button>
-      </p>
+        <p style={{ fontSize: 14, marginTop: 18, color: 'var(--muted)' }}>
+          Didn’t get it? <button onClick={onResend} className="btn-link">Resend code</button>
+        </p>
+      </div>
     </div>
   )
 }

@@ -3,15 +3,6 @@ import { createBooking } from '../api'
 import { useAuth } from '../auth'
 import type { Listing } from '../types'
 
-const field = {
-  width: '100%',
-  padding: '8px 10px',
-  borderRadius: 8,
-  border: '1px solid #d1d5db',
-  marginTop: 4,
-  fontSize: 14,
-} as const
-
 export default function BookingModal({
   listing,
   onClose,
@@ -56,44 +47,29 @@ export default function BookingModal({
   }
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.4)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 16,
-        zIndex: 50,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{ background: '#fff', borderRadius: 12, padding: 24, width: '100%', maxWidth: 420 }}
-      >
-        <h3 style={{ marginTop: 0 }}>Book · {listing.title}</h3>
-        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 0 }}>
+    <div onClick={onClose} className="modal-backdrop">
+      <div onClick={(e) => e.stopPropagation()} className="modal-card">
+        <h3 style={{ marginTop: 0, marginBottom: 2 }}>Book · {listing.title}</h3>
+        <p style={{ color: 'var(--muted)', fontSize: 14, marginTop: 0 }}>
           {listing.location} · ₹{listing.pricePerDay.toLocaleString('en-IN')}/day · {listing.quantity} available
         </p>
 
         <form onSubmit={submit}>
           <div style={{ display: 'flex', gap: 12 }}>
-            <label style={{ flex: 1, fontSize: 14 }}>
+            <label className="label" style={{ flex: 1 }}>
               Check-in
-              <input style={field} type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+              <input className="field" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
             </label>
-            <label style={{ flex: 1, fontSize: 14 }}>
+            <label className="label" style={{ flex: 1 }}>
               Check-out
-              <input style={field} type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+              <input className="field" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
             </label>
           </div>
 
-          <label style={{ display: 'block', fontSize: 14, marginTop: 12 }}>
+          <label className="label">
             Quantity
             <input
-              style={field}
+              className="field"
               type="number"
               min={1}
               max={listing.quantity}
@@ -103,32 +79,24 @@ export default function BookingModal({
             />
           </label>
 
-          <div style={{ marginTop: 16, padding: '10px 12px', background: '#f9fafb', borderRadius: 8, fontSize: 14 }}>
+          <div className="summary">
             {nights > 0 ? (
               <>
                 {nights} night{nights > 1 ? 's' : ''} × ₹{listing.pricePerDay.toLocaleString('en-IN')} × {quantity} ={' '}
-                <strong>₹{total.toLocaleString('en-IN')}</strong>
+                <strong style={{ color: 'var(--ink)' }}>₹{total.toLocaleString('en-IN')}</strong>
               </>
             ) : (
-              <span style={{ color: '#6b7280' }}>Pick dates to see the total.</span>
+              <span style={{ color: 'var(--muted)' }}>Pick dates to see the total.</span>
             )}
           </div>
 
-          {error && <p style={{ color: 'crimson', fontSize: 14 }}>{error}</p>}
+          {error && <p className="alert alert-error" style={{ marginTop: 14 }}>{error}</p>}
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 16, justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}
-            >
+          <div style={{ display: 'flex', gap: 8, marginTop: 18, justifyContent: 'flex-end' }}>
+            <button type="button" onClick={onClose} className="btn btn-outline">
               Cancel
             </button>
-            <button
-              type="submit"
-              disabled={busy}
-              style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer' }}
-            >
+            <button type="submit" disabled={busy} className="btn btn-primary">
               {busy ? 'Booking…' : 'Confirm booking'}
             </button>
           </div>
