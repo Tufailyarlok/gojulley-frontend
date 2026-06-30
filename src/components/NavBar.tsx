@@ -26,7 +26,7 @@ export default function NavBar() {
         }}
       >
         <Link to="/" style={{ fontWeight: 700, textDecoration: 'none', color: '#111827', fontSize: 18 }}>
-          TripStack
+          GoJulley
         </Link>
         <span style={{ color: '#9ca3af', fontSize: 13 }}>· Ladakh trips</span>
 
