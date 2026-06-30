@@ -1,7 +1,7 @@
 // One place for all backend calls. Vite proxies /api/* to the Spring Boot
 // server (see vite.config.ts), so we use relative URLs here.
 
-import type { Booking, Listing, ListingType, Payment } from './types'
+import type { Booking, Listing, ListingType } from './types'
 
 const BASE = '/api/v1'
 
@@ -33,8 +33,16 @@ export interface NewBooking {
   quantity: number
 }
 
-// Error that also carries the HTTP status, so callers can branch on it
-// (e.g. login -> 403 means "email not verified").
+export interface PaymentOrder {
+  razorpayOrderId: string
+  amount: number // paise
+  currency: string
+  keyId: string
+  bookingId: number
+  real: boolean // false => mock (skip the gateway popup)
+}
+
+// Error that also carries the HTTP status, so callers can branch on it.
 export class ApiError extends Error {
   status: number
   constructor(message: string, status: number) {
@@ -47,18 +55,24 @@ function authHeaders(token: string) {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
 }
 
-async function handle<T>(res: Response): Promise<T> {
-  if (!res.ok) {
-    let msg = `Request failed (HTTP ${res.status})`
-    try {
-      const body = await res.json()
-      msg = body?.message || body?.detail || body?.error || msg
-    } catch {
-      /* no JSON body */
-    }
-    throw new ApiError(msg, res.status)
+async function readError(res: Response): Promise<string> {
+  let msg = `Request failed (HTTP ${res.status})`
+  try {
+    const body = await res.json()
+    msg = body?.message || body?.detail || body?.error || msg
+  } catch {
+    /* no JSON body */
   }
+  return msg
+}
+
+async function handle<T>(res: Response): Promise<T> {
+  if (!res.ok) throw new ApiError(await readError(res), res.status)
   return res.json() as Promise<T>
+}
+
+async function handleNoBody(res: Response): Promise<void> {
+  if (!res.ok) throw new ApiError(await readError(res), res.status)
 }
 
 const jsonHeaders = { 'Content-Type': 'application/json' }
@@ -76,41 +90,25 @@ export async function getListings(params?: {
 
 export async function login(email: string, password: string): Promise<AuthUser> {
   return handle<AuthUser>(
-    await fetch(`${BASE}/auth/login`, {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({ email, password }),
-    }),
+    await fetch(`${BASE}/auth/login`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email, password }) }),
   )
 }
 
 export async function signup(email: string, password: string, name: string): Promise<SignupResponse> {
   return handle<SignupResponse>(
-    await fetch(`${BASE}/auth/signup`, {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({ email, password, name }),
-    }),
+    await fetch(`${BASE}/auth/signup`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email, password, name }) }),
   )
 }
 
 export async function verifyOtp(email: string, code: string): Promise<AuthUser> {
   return handle<AuthUser>(
-    await fetch(`${BASE}/auth/verify-otp`, {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({ email, code }),
-    }),
+    await fetch(`${BASE}/auth/verify-otp`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email, code }) }),
   )
 }
 
 export async function resendOtp(email: string): Promise<SignupResponse> {
   return handle<SignupResponse>(
-    await fetch(`${BASE}/auth/resend-otp`, {
-      method: 'POST',
-      headers: jsonHeaders,
-      body: JSON.stringify({ email }),
-    }),
+    await fetch(`${BASE}/auth/resend-otp`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email }) }),
   )
 }
 
@@ -136,12 +134,18 @@ export async function cancelBooking(token: string, id: number): Promise<Booking>
   )
 }
 
-export async function payForBooking(token: string, bookingId: number, idempotencyKey: string): Promise<Payment> {
-  return handle<Payment>(
-    await fetch(`${BASE}/payments`, {
-      method: 'POST',
-      headers: authHeaders(token),
-      body: JSON.stringify({ bookingId, idempotencyKey }),
-    }),
+// --- Payments (Razorpay) ---
+export async function createPaymentOrder(token: string, bookingId: number): Promise<PaymentOrder> {
+  return handle<PaymentOrder>(
+    await fetch(`${BASE}/payments/order`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ bookingId }) }),
+  )
+}
+
+export async function verifyPayment(
+  token: string,
+  data: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string },
+): Promise<void> {
+  return handleNoBody(
+    await fetch(`${BASE}/payments/verify`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
   )
 }

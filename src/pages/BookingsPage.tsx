@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { cancelBooking, getMyBookings, payForBooking } from '../api'
+import { cancelBooking, createPaymentOrder, getMyBookings, verifyPayment } from '../api'
 import { useAuth } from '../auth'
 import type { Booking } from '../types'
 
@@ -8,6 +8,21 @@ const statusColor: Record<Booking['status'], string> = {
   PENDING: '#b45309',
   CONFIRMED: '#059669',
   CANCELLED: '#9ca3af',
+}
+
+// Load Razorpay's checkout script on demand (once).
+function loadRazorpay(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if ((window as unknown as { Razorpay?: unknown }).Razorpay) {
+      resolve(true)
+      return
+    }
+    const s = document.createElement('script')
+    s.src = 'https://checkout.razorpay.com/v1/checkout.js'
+    s.onload = () => resolve(true)
+    s.onerror = () => resolve(false)
+    document.body.appendChild(s)
+  })
 }
 
 export default function BookingsPage() {
@@ -44,10 +59,51 @@ export default function BookingsPage() {
     setBusyId(b.id)
     setError(null)
     try {
-      // A fresh key per payment attempt; the backend uses it to stay idempotent.
-      const key = crypto.randomUUID()
-      const payment = await payForBooking(user!.token, b.id, key)
-      if (payment.status === 'PAID') updateOne(b.id, { status: 'CONFIRMED' })
+      const order = await createPaymentOrder(user!.token, b.id)
+
+      // Dev / no keys: skip the gateway popup and confirm directly.
+      if (!order.real) {
+        await verifyPayment(user!.token, {
+          razorpayOrderId: order.razorpayOrderId,
+          razorpayPaymentId: 'mock_pay',
+          razorpaySignature: 'mock_sig',
+        })
+        updateOne(b.id, { status: 'CONFIRMED' })
+        return
+      }
+
+      const ok = await loadRazorpay()
+      if (!ok) {
+        setError('Could not load the payment gateway.')
+        return
+      }
+
+      const RazorpayCtor = (window as unknown as { Razorpay: new (o: object) => { open: () => void; on: (e: string, cb: (r: unknown) => void) => void } }).Razorpay
+      const rzp = new RazorpayCtor({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.razorpayOrderId,
+        name: 'GoJulley',
+        description: b.listingTitle,
+        prefill: { email: user!.email, name: user!.name },
+        theme: { color: '#2563eb' },
+        handler: async (resp: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          try {
+            await verifyPayment(user!.token, {
+              razorpayOrderId: resp.razorpay_order_id,
+              razorpayPaymentId: resp.razorpay_payment_id,
+              razorpaySignature: resp.razorpay_signature,
+            })
+            updateOne(b.id, { status: 'CONFIRMED' })
+          } catch (err) {
+            setError((err as Error).message)
+          }
+        },
+      } as object) as { open: () => void; on: (e: string, cb: (r: unknown) => void) => void }
+
+      rzp.on('payment.failed', () => setError('Payment failed. Please try again.'))
+      rzp.open()
     } catch (err) {
       setError((err as Error).message)
     } finally {
@@ -110,7 +166,7 @@ export default function BookingsPage() {
                   disabled={busyId === b.id}
                   style={{ padding: '6px 14px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 14 }}
                 >
-                  {busyId === b.id ? 'Paying…' : `Pay ₹${b.totalPrice.toLocaleString('en-IN')}`}
+                  {busyId === b.id ? 'Processing…' : `Pay ₹${b.totalPrice.toLocaleString('en-IN')}`}
                 </button>
               )}
               {b.status !== 'CANCELLED' && (
