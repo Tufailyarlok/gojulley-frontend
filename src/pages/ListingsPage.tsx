@@ -54,7 +54,7 @@ export default function ListingsPage() {
 
   function onBooked() {
     setBooking(null)
-    setFlash('Booked! See it under “My bookings”.')
+    setFlash('Reserved! Complete payment under “My bookings” to confirm.')
     load() // refresh availability counts
   }
 

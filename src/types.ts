@@ -12,7 +12,7 @@ export interface Listing {
   description: string
 }
 
-export type BookingStatus = 'CONFIRMED' | 'CANCELLED'
+export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED'
 
 export interface Booking {
   id: number
@@ -24,4 +24,14 @@ export interface Booking {
   quantity: number
   totalPrice: number
   status: BookingStatus
+}
+
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED'
+
+export interface Payment {
+  id: number
+  bookingId: number
+  amount: number
+  status: PaymentStatus
+  providerPaymentId: string | null
 }

@@ -1,7 +1,7 @@
 // One place for all backend calls. Vite proxies /api/* to the Spring Boot
 // server (see vite.config.ts), so we use relative URLs here.
 
-import type { Booking, Listing, ListingType } from './types'
+import type { Booking, Listing, ListingType, Payment } from './types'
 
 const BASE = '/api/v1'
 
@@ -105,5 +105,15 @@ export async function getMyBookings(token: string): Promise<Booking[]> {
 export async function cancelBooking(token: string, id: number): Promise<Booking> {
   return handle<Booking>(
     await fetch(`${BASE}/bookings/${id}/cancel`, { method: 'POST', headers: authHeaders(token) }),
+  )
+}
+
+export async function payForBooking(token: string, bookingId: number, idempotencyKey: string): Promise<Payment> {
+  return handle<Payment>(
+    await fetch(`${BASE}/payments`, {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: JSON.stringify({ bookingId, idempotencyKey }),
+    }),
   )
 }
