@@ -370,6 +370,36 @@ button {
   padding: 3px 9px;
   border-radius: 6px;
 }
+.book-btn {
+  margin-top: 16px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+}
+.book-btn:hover:not(:disabled) {
+  background: var(--brand-dark);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.28);
+}
+.book-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.book-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+.book-btn:disabled {
+  background: #eef1f5;
+  color: var(--faint);
+  cursor: not-allowed;
+}
 
 /* ============ Booking summary box ============ */
 .summary {

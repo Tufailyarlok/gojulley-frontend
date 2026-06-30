@@ -115,7 +115,7 @@ export default function ListingsPage() {
                 </span>
               </div>
               <button onClick={() => onBook(l)} disabled={l.quantity === 0} className="book-btn">
-                {l.quantity === 0 ? 'Sold out' : 'Book'}
+                {l.quantity === 0 ? 'Sold out' : 'Book now →'}
               </button>
             </article>
           ))}

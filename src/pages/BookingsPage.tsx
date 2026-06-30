@@ -126,7 +126,10 @@ export default function BookingsPage() {
 
   return (
     <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-      <h2 className="section-title" style={{ marginTop: 0, marginBottom: 18 }}>My bookings</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
+        <h2 className="section-title" style={{ margin: 0 }}>My bookings</h2>
+        <Link to="/" className="btn btn-outline">← Browse listings</Link>
+      </div>
 
       {loading && <p style={{ color: 'var(--muted)' }}>Loading…</p>}
       {error && <div className="alert alert-error" style={{ marginBottom: 14 }}>{error}</div>}
