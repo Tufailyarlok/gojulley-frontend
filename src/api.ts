@@ -1,7 +1,7 @@
 // One place for all backend calls. Vite proxies /api/* to the Spring Boot
 // server (see vite.config.ts), so we use relative URLs here.
 
-import type { Booking, Listing, ListingType } from './types'
+import type { AdminStats, Booking, Listing, ListingType } from './types'
 
 // Local dev: VITE_API_URL is unset, so calls go to '/api/v1' (Vite proxy).
 // Production: set VITE_API_URL to the backend's public URL at build time.
@@ -55,6 +55,39 @@ export class ApiError extends Error {
 
 function authHeaders(token: string) {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+}
+
+// The app (see auth.tsx) registers a handler here so the API layer can force a
+// re-login when the stored token is expired/invalid. Both cases surface as an
+// auth failure on an authenticated call, which the backend returns as either a
+// 401 or a 403 with the message "Access Denied".
+let onAuthError: (() => void) | null = null
+export function setAuthErrorHandler(fn: (() => void) | null) {
+  onAuthError = fn
+}
+
+// Every authenticated request goes through here. If the token is rejected, we
+// fire onAuthError once — but we DON'T treat a legitimate business 403 (e.g.
+// "Not your booking") as a session failure, only Spring Security's "Access
+// Denied" (or a 401).
+async function authedFetch(token: string, url: string, init: RequestInit = {}): Promise<Response> {
+  const res = await fetch(url, {
+    ...init,
+    headers: { ...authHeaders(token), ...(init.headers as Record<string, string> | undefined) },
+  })
+  if (res.status === 401 || res.status === 403) {
+    let authFailed = res.status === 401
+    if (res.status === 403) {
+      try {
+        const body = await res.clone().json()
+        authFailed = body?.message === 'Access Denied'
+      } catch {
+        authFailed = true // opaque 403 with no JSON body -> treat as auth failure
+      }
+    }
+    if (authFailed) onAuthError?.()
+  }
+  return res
 }
 
 async function readError(res: Response): Promise<string> {
@@ -116,30 +149,53 @@ export async function resendOtp(email: string): Promise<SignupResponse> {
 
 export async function createListing(token: string, data: NewListing): Promise<Listing> {
   return handle<Listing>(
-    await fetch(`${BASE}/listings`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
+    await authedFetch(token, `${BASE}/listings`, { method: 'POST', body: JSON.stringify(data) }),
   )
 }
 
 export async function createBooking(token: string, data: NewBooking): Promise<Booking> {
   return handle<Booking>(
-    await fetch(`${BASE}/bookings`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
+    await authedFetch(token, `${BASE}/bookings`, { method: 'POST', body: JSON.stringify(data) }),
   )
 }
 
 export async function getMyBookings(token: string): Promise<Booking[]> {
-  return handle<Booking[]>(await fetch(`${BASE}/bookings`, { headers: authHeaders(token) }))
+  return handle<Booking[]>(await authedFetch(token, `${BASE}/bookings`))
+}
+
+export async function updateListing(token: string, id: number, data: NewListing): Promise<Listing> {
+  return handle<Listing>(
+    await authedFetch(token, `${BASE}/listings/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  )
+}
+
+export async function deleteListing(token: string, id: number): Promise<void> {
+  return handleNoBody(await authedFetch(token, `${BASE}/listings/${id}`, { method: 'DELETE' }))
+}
+
+// --- Admin dashboard ---
+export async function getAdminStats(token: string): Promise<AdminStats> {
+  return handle<AdminStats>(await authedFetch(token, `${BASE}/admin/stats`))
+}
+
+export async function getAllBookings(token: string): Promise<Booking[]> {
+  return handle<Booking[]>(await authedFetch(token, `${BASE}/admin/bookings`))
+}
+
+export async function adminCancelBooking(token: string, id: number): Promise<Booking> {
+  return handle<Booking>(await authedFetch(token, `${BASE}/admin/bookings/${id}/cancel`, { method: 'POST' }))
 }
 
 export async function cancelBooking(token: string, id: number): Promise<Booking> {
   return handle<Booking>(
-    await fetch(`${BASE}/bookings/${id}/cancel`, { method: 'POST', headers: authHeaders(token) }),
+    await authedFetch(token, `${BASE}/bookings/${id}/cancel`, { method: 'POST' }),
   )
 }
 
 // --- Payments (Razorpay) ---
 export async function createPaymentOrder(token: string, bookingId: number): Promise<PaymentOrder> {
   return handle<PaymentOrder>(
-    await fetch(`${BASE}/payments/order`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ bookingId }) }),
+    await authedFetch(token, `${BASE}/payments/order`, { method: 'POST', body: JSON.stringify({ bookingId }) }),
   )
 }
 
@@ -148,6 +204,6 @@ export async function verifyPayment(
   data: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string },
 ): Promise<void> {
   return handleNoBody(
-    await fetch(`${BASE}/payments/verify`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(data) }),
+    await authedFetch(token, `${BASE}/payments/verify`, { method: 'POST', body: JSON.stringify(data) }),
   )
 }

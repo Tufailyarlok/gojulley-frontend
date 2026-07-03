@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ApiError, login as apiLogin, signup as apiSignup } from '../api'
 import { useAuth } from '../auth'
 
 export default function LoginPage() {
   const { setUser } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const expired = searchParams.get('expired') === '1'
 
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
@@ -46,6 +48,12 @@ export default function LoginPage() {
         <p className="section-sub" style={{ marginBottom: 20 }}>
           {mode === 'login' ? 'Log in to manage your Ladakh bookings.' : 'Sign up to start booking stays and rides.'}
         </p>
+
+        {expired && (
+          <p className="alert alert-error" style={{ marginBottom: 16 }}>
+            Your session expired. Please log in again.
+          </p>
+        )}
 
         <form onSubmit={submit}>
           {mode === 'signup' && (
