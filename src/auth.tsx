@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { setAuthErrorHandler } from './api'
 
 export interface AuthUser {
   token: string
@@ -36,6 +37,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout = () => setUser(null)
+
+  // If the API layer sees a rejected/expired token on an authenticated call,
+  // drop the stale login and send the user to log in again. (AuthProvider sits
+  // outside the Router, so we redirect via window.location rather than navigate.)
+  useEffect(() => {
+    setAuthErrorHandler(() => {
+      localStorage.removeItem(STORAGE_KEY)
+      setUserState(null)
+      if (window.location.pathname !== '/login') {
+        window.location.assign('/login?expired=1')
+      }
+    })
+    return () => setAuthErrorHandler(null)
+  }, [])
 
   return <AuthContext.Provider value={{ user, setUser, logout }}>{children}</AuthContext.Provider>
 }

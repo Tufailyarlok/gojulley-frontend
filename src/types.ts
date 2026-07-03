@@ -35,3 +35,13 @@ export interface Payment {
   status: PaymentStatus
   providerPaymentId: string | null
 }
+
+// Overview numbers for the admin dashboard (mirrors backend AdminStats).
+export interface AdminStats {
+  totalBookings: number
+  confirmedBookings: number
+  confirmedRevenue: number
+  totalListings: number
+  unitsAvailable: number
+  pendingPayments: number
+}
