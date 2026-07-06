@@ -1,17 +1,22 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import {
   adminCancelBooking,
   createListing,
+  createTripPackage,
   deleteListing,
+  deleteTripPackage,
   getAdminStats,
+  getAdminTrips,
   getAllBookings,
   getListings,
   updateListing,
+  updateTripPackage,
   type NewListing,
+  type NewTripPackage,
 } from '../api'
 import { useAuth } from '../auth'
-import type { AdminStats, Booking, Listing, ListingType } from '../types'
+import type { AdminStats, Booking, Listing, ListingType, TripPackage } from '../types'
 
 const TYPES: ListingType[] = ['HOTEL', 'HOMESTAY', 'CAR', 'BIKE']
 const EMPTY_FORM: NewListing = {
@@ -23,11 +28,12 @@ const EMPTY_FORM: NewListing = {
   description: '',
 }
 
-type Tab = 'overview' | 'bookings' | 'listings'
+type Tab = 'overview' | 'bookings' | 'listings' | 'trips'
 const TABS: { key: Tab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'bookings', label: 'Bookings' },
   { key: 'listings', label: 'Listings' },
+  { key: 'trips', label: 'Trips' },
 ]
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
@@ -357,6 +363,264 @@ function ListingsTab({ token }: { token: string }) {
   )
 }
 
+// ---- Trips (manage packages) --------------------------------------------
+const EMPTY_TRIP = {
+  title: '',
+  route: '',
+  summary: '',
+  durationDays: 1,
+  pricePerPerson: 0,
+  active: true,
+  itinerary: '',
+  included: '',
+  notIncluded: '',
+  items: [] as { listingId: number; quantity: number }[],
+}
+
+function TripsTab({ token }: { token: string }) {
+  const [packages, setPackages] = useState<TripPackage[] | null>(null)
+  const [listings, setListings] = useState<Listing[]>([])
+  const [form, setForm] = useState(EMPTY_TRIP)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [msg, setMsg] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const reload = useCallback(() => {
+    getAdminTrips(token)
+      .then(setPackages)
+      .catch((e) => setError((e as Error).message))
+  }, [token])
+  useEffect(() => {
+    reload()
+    getListings()
+      .then(setListings)
+      .catch(() => {})
+  }, [reload])
+
+  function resetForm() {
+    setEditingId(null)
+    setForm(EMPTY_TRIP)
+  }
+
+  function startEdit(p: TripPackage) {
+    setEditingId(p.id)
+    setForm({
+      title: p.title,
+      route: p.route,
+      summary: p.summary ?? '',
+      durationDays: p.durationDays,
+      pricePerPerson: p.pricePerPerson,
+      active: p.active,
+      itinerary: p.itinerary.join('\n'),
+      included: p.included.join('\n'),
+      notIncluded: p.notIncluded.join('\n'),
+      items: p.items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
+    })
+    setMsg(null)
+    setError(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function setItem(idx: number, patch: Partial<{ listingId: number; quantity: number }>) {
+    setForm((f) => ({ ...f, items: f.items.map((it, i) => (i === idx ? { ...it, ...patch } : it)) }))
+  }
+  function addItem() {
+    setForm((f) => ({ ...f, items: [...f.items, { listingId: listings[0]?.id ?? 0, quantity: 1 }] }))
+  }
+  function removeItem(idx: number) {
+    setForm((f) => ({ ...f, items: f.items.filter((_, i) => i !== idx) }))
+  }
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setMsg(null)
+    setError(null)
+    setBusy(true)
+    const payload: NewTripPackage = {
+      title: form.title,
+      route: form.route,
+      summary: form.summary,
+      durationDays: form.durationDays,
+      pricePerPerson: form.pricePerPerson,
+      active: form.active,
+      itinerary: form.itinerary.split('\n'),
+      included: form.included.split('\n'),
+      notIncluded: form.notIncluded.split('\n'),
+      items: form.items.filter((i) => i.listingId > 0),
+    }
+    try {
+      if (editingId != null) {
+        const u = await updateTripPackage(token, editingId, payload)
+        setMsg(`Updated “${u.title}”.`)
+      } else {
+        const c = await createTripPackage(token, payload)
+        setMsg(`Created “${c.title}” (id ${c.id}).`)
+      }
+      resetForm()
+      reload()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function remove(p: TripPackage) {
+    if (!window.confirm(`Delete “${p.title}”? (Packages with bookings can't be deleted — deactivate instead.)`)) return
+    setError(null)
+    try {
+      await deleteTripPackage(token, p.id)
+      if (editingId === p.id) resetForm()
+      reload()
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
+  return (
+    <>
+      <form onSubmit={submit} className="card" style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>{editingId != null ? `Edit package #${editingId}` : 'Create a trip package'}</h3>
+
+        <label className="label">
+          Title
+          <input className="field" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+        </label>
+
+        <div className="form-row">
+          <label className="label" style={{ flex: 2 }}>
+            Route
+            <input
+              className="field"
+              value={form.route}
+              onChange={(e) => setForm({ ...form, route: e.target.value })}
+              placeholder="Leh · Nubra · Pangong"
+              required
+            />
+          </label>
+          <label className="label" style={{ flex: 1 }}>
+            Days
+            <input className="field" type="number" min={1} value={form.durationDays} onChange={(e) => setForm({ ...form, durationDays: Number(e.target.value) })} required />
+          </label>
+          <label className="label" style={{ flex: 1 }}>
+            Price/person (₹)
+            <input className="field" type="number" min={1} value={form.pricePerPerson} onChange={(e) => setForm({ ...form, pricePerPerson: Number(e.target.value) })} required />
+          </label>
+        </div>
+
+        <label className="label">
+          Summary
+          <textarea className="field" style={{ minHeight: 48, resize: 'vertical' }} value={form.summary} onChange={(e) => setForm({ ...form, summary: e.target.value })} />
+        </label>
+
+        <label className="label">
+          Itinerary (one line per day)
+          <textarea
+            className="field"
+            style={{ minHeight: 90, resize: 'vertical' }}
+            value={form.itinerary}
+            onChange={(e) => setForm({ ...form, itinerary: e.target.value })}
+            placeholder={'Day 1 — Arrive Leh, rest & acclimatise.\nDay 2 — ...'}
+          />
+        </label>
+
+        <div className="form-row">
+          <label className="label" style={{ flex: 1 }}>
+            Included (one per line)
+            <textarea className="field" style={{ minHeight: 70, resize: 'vertical' }} value={form.included} onChange={(e) => setForm({ ...form, included: e.target.value })} />
+          </label>
+          <label className="label" style={{ flex: 1 }}>
+            Not included (one per line)
+            <textarea className="field" style={{ minHeight: 70, resize: 'vertical' }} value={form.notIncluded} onChange={(e) => setForm({ ...form, notIncluded: e.target.value })} />
+          </label>
+        </div>
+
+        <div className="label" style={{ marginBottom: 4 }}>What&rsquo;s inside (listings)</div>
+        <div style={{ display: 'grid', gap: 8, marginBottom: 10 }}>
+          {form.items.map((it, idx) => (
+            <div key={idx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <select className="field" style={{ flex: 1, margin: 0 }} value={it.listingId} onChange={(e) => setItem(idx, { listingId: Number(e.target.value) })}>
+                {listings.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.title} ({l.type})
+                  </option>
+                ))}
+              </select>
+              <input className="field" style={{ width: 80, margin: 0 }} type="number" min={1} value={it.quantity} onChange={(e) => setItem(idx, { quantity: Number(e.target.value) })} />
+              <button type="button" className="btn btn-outline" onClick={() => removeItem(idx)}>✕</button>
+            </div>
+          ))}
+          <button type="button" className="btn btn-outline" onClick={addItem} style={{ justifySelf: 'start' }}>+ Add listing</button>
+        </div>
+
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 12px', fontSize: 14 }}>
+          <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+          Active (visible to customers)
+        </label>
+
+        {msg && <p className="alert alert-success" style={{ marginBottom: 12 }}>{msg}</p>}
+        {error && <p className="alert alert-error" style={{ marginBottom: 12 }}>{error}</p>}
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button type="submit" className="btn btn-primary" disabled={busy}>
+            {busy ? 'Saving…' : editingId != null ? 'Save changes' : 'Create package'}
+          </button>
+          {editingId != null && (
+            <button type="button" className="btn btn-outline" onClick={resetForm}>
+              Cancel edit
+            </button>
+          )}
+        </div>
+      </form>
+
+      {!packages ? (
+        <p style={{ color: 'var(--muted)' }}>Loading…</p>
+      ) : packages.length === 0 ? (
+        <p style={{ color: 'var(--muted)' }}>No packages yet — create one above.</p>
+      ) : (
+        <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Route</th>
+                <th>Days</th>
+                <th>Price</th>
+                <th>Items</th>
+                <th>Active</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {packages.map((p) => (
+                <tr key={p.id}>
+                  <td>{p.id}</td>
+                  <td>{p.title}</td>
+                  <td>{p.route}</td>
+                  <td>{p.durationDays}</td>
+                  <td>{inr(p.pricePerPerson)}</td>
+                  <td>{p.items.length}</td>
+                  <td>{p.active ? 'Yes' : 'No'}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <button className="btn btn-outline" style={{ marginRight: 6 }} onClick={() => startEdit(p)}>
+                      Edit
+                    </button>
+                    <button className="btn btn-danger" onClick={() => remove(p)}>
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  )
+}
+
 // ---- Page shell ----------------------------------------------------------
 export default function AdminPage() {
   const { user } = useAuth()
@@ -393,6 +657,7 @@ export default function AdminPage() {
       {tab === 'overview' && <OverviewTab token={user.token} />}
       {tab === 'bookings' && <BookingsTab token={user.token} />}
       {tab === 'listings' && <ListingsTab token={user.token} />}
+      {tab === 'trips' && <TripsTab token={user.token} />}
     </div>
   )
 }
