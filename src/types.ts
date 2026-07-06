@@ -36,6 +36,40 @@ export interface Payment {
   providerPaymentId: string | null
 }
 
+// A component of a trip package ("what's inside").
+export interface PackageItem {
+  listingId: number
+  listingTitle: string
+  type: ListingType
+  quantity: number
+}
+
+// A curated, all-inclusive trip (bundle of listings sold as one product).
+export interface TripPackage {
+  id: number
+  title: string
+  route: string
+  summary: string
+  durationDays: number
+  pricePerPerson: number
+  itinerary: string[]
+  included: string[]
+  notIncluded: string[]
+  items: PackageItem[]
+}
+
+// A booking of a whole trip package.
+export interface TripBooking {
+  id: number
+  packageId: number | null
+  packageTitle: string
+  userEmail: string
+  startDate: string
+  travelers: number
+  totalPrice: number
+  status: BookingStatus
+}
+
 // Overview numbers for the admin dashboard (mirrors backend AdminStats).
 export interface AdminStats {
   totalBookings: number

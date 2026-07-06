@@ -6,6 +6,8 @@ import LoginPage from './pages/LoginPage'
 import VerifyOtpPage from './pages/VerifyOtpPage'
 import AdminPage from './pages/AdminPage'
 import BookingsPage from './pages/BookingsPage'
+import TripsPage from './pages/TripsPage'
+import TripDetailPage from './pages/TripDetailPage'
 
 export default function App() {
   return (
@@ -14,6 +16,8 @@ export default function App() {
         <NavBar />
         <Routes>
           <Route path="/" element={<ListingsPage />} />
+          <Route path="/trips" element={<TripsPage />} />
+          <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify" element={<VerifyOtpPage />} />
           <Route path="/admin" element={<AdminPage />} />
