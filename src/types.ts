@@ -52,6 +52,7 @@ export interface TripPackage {
   summary: string
   durationDays: number
   pricePerPerson: number
+  active: boolean
   itinerary: string[]
   included: string[]
   notIncluded: string[]

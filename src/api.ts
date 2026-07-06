@@ -219,6 +219,40 @@ export async function verifyTripPayment(
   )
 }
 
+// --- Admin: manage trip packages ---
+export interface NewTripPackage {
+  title: string
+  route: string
+  summary: string
+  durationDays: number
+  pricePerPerson: number
+  active: boolean
+  itinerary: string[]
+  included: string[]
+  notIncluded: string[]
+  items: { listingId: number; quantity: number }[]
+}
+
+export async function getAdminTrips(token: string): Promise<TripPackage[]> {
+  return handle<TripPackage[]>(await authedFetch(token, `${BASE}/admin/trips`))
+}
+
+export async function createTripPackage(token: string, data: NewTripPackage): Promise<TripPackage> {
+  return handle<TripPackage>(
+    await authedFetch(token, `${BASE}/admin/trips`, { method: 'POST', body: JSON.stringify(data) }),
+  )
+}
+
+export async function updateTripPackage(token: string, id: number, data: NewTripPackage): Promise<TripPackage> {
+  return handle<TripPackage>(
+    await authedFetch(token, `${BASE}/admin/trips/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  )
+}
+
+export async function deleteTripPackage(token: string, id: number): Promise<void> {
+  return handleNoBody(await authedFetch(token, `${BASE}/admin/trips/${id}`, { method: 'DELETE' }))
+}
+
 // --- Admin dashboard ---
 export async function getAdminStats(token: string): Promise<AdminStats> {
   return handle<AdminStats>(await authedFetch(token, `${BASE}/admin/stats`))
