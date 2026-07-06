@@ -1,7 +1,7 @@
 // One place for all backend calls. Vite proxies /api/* to the Spring Boot
 // server (see vite.config.ts), so we use relative URLs here.
 
-import type { AdminStats, Booking, Listing, ListingType } from './types'
+import type { AdminStats, Booking, Listing, ListingType, TripBooking, TripPackage } from './types'
 
 // Local dev: VITE_API_URL is unset, so calls go to '/api/v1' (Vite proxy).
 // Production: set VITE_API_URL to the backend's public URL at build time.
@@ -171,6 +171,52 @@ export async function updateListing(token: string, id: number, data: NewListing)
 
 export async function deleteListing(token: string, id: number): Promise<void> {
   return handleNoBody(await authedFetch(token, `${BASE}/listings/${id}`, { method: 'DELETE' }))
+}
+
+// --- Trips (curated packages) ---
+export interface NewTripBooking {
+  packageId: number
+  startDate: string
+  travelers: number
+}
+
+export async function getTrips(): Promise<TripPackage[]> {
+  return handle<TripPackage[]>(await fetch(`${BASE}/trips`))
+}
+
+export async function getTrip(id: number): Promise<TripPackage> {
+  return handle<TripPackage>(await fetch(`${BASE}/trips/${id}`))
+}
+
+export async function createTripBooking(token: string, data: NewTripBooking): Promise<TripBooking> {
+  return handle<TripBooking>(
+    await authedFetch(token, `${BASE}/trip-bookings`, { method: 'POST', body: JSON.stringify(data) }),
+  )
+}
+
+export async function getMyTrips(token: string): Promise<TripBooking[]> {
+  return handle<TripBooking[]>(await authedFetch(token, `${BASE}/trip-bookings`))
+}
+
+export async function cancelTripBooking(token: string, id: number): Promise<TripBooking> {
+  return handle<TripBooking>(
+    await authedFetch(token, `${BASE}/trip-bookings/${id}/cancel`, { method: 'POST' }),
+  )
+}
+
+export async function createTripPaymentOrder(token: string, tripBookingId: number): Promise<PaymentOrder> {
+  return handle<PaymentOrder>(
+    await authedFetch(token, `${BASE}/trip-payments/order`, { method: 'POST', body: JSON.stringify({ tripBookingId }) }),
+  )
+}
+
+export async function verifyTripPayment(
+  token: string,
+  data: { razorpayOrderId: string; razorpayPaymentId: string; razorpaySignature: string },
+): Promise<void> {
+  return handleNoBody(
+    await authedFetch(token, `${BASE}/trip-payments/verify`, { method: 'POST', body: JSON.stringify(data) }),
+  )
 }
 
 // --- Admin dashboard ---

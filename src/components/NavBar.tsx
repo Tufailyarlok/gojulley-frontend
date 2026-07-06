@@ -15,6 +15,9 @@ export default function NavBar() {
 
         <span className="nav-spacer" />
         <div className="nav-actions">
+          <Link to="/trips" className="nav-link">
+            Trips
+          </Link>
           {user && (
             <Link to="/bookings" className="nav-link">
               My bookings
