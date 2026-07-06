@@ -2,21 +2,25 @@ import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from
 import { Link } from 'react-router-dom'
 import {
   adminCancelBooking,
+  createCoupon,
   createListing,
   createTripPackage,
+  deleteCoupon,
   deleteListing,
   deleteTripPackage,
+  getAdminCoupons,
   getAdminStats,
   getAdminTrips,
   getAllBookings,
   getListings,
   updateListing,
   updateTripPackage,
+  type NewCoupon,
   type NewListing,
   type NewTripPackage,
 } from '../api'
 import { useAuth } from '../auth'
-import type { AdminStats, Booking, Listing, ListingType, TripPackage } from '../types'
+import type { AdminStats, Booking, Coupon, CouponType, Listing, ListingType, TripPackage } from '../types'
 
 const TYPES: ListingType[] = ['HOTEL', 'HOMESTAY', 'CAR', 'BIKE']
 const EMPTY_FORM: NewListing = {
@@ -28,12 +32,13 @@ const EMPTY_FORM: NewListing = {
   description: '',
 }
 
-type Tab = 'overview' | 'bookings' | 'listings' | 'trips'
+type Tab = 'overview' | 'bookings' | 'listings' | 'trips' | 'coupons'
 const TABS: { key: Tab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'bookings', label: 'Bookings' },
   { key: 'listings', label: 'Listings' },
   { key: 'trips', label: 'Trips' },
+  { key: 'coupons', label: 'Coupons' },
 ]
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
@@ -621,6 +626,174 @@ function TripsTab({ token }: { token: string }) {
   )
 }
 
+// ---- Coupons -------------------------------------------------------------
+const EMPTY_COUPON = {
+  code: '',
+  type: 'FLAT' as CouponType,
+  value: 0,
+  minAmount: '',
+  maxDiscount: '',
+  firstBookingOnly: false,
+  active: true,
+  maxRedemptions: '',
+}
+
+function CouponsTab({ token }: { token: string }) {
+  const [coupons, setCoupons] = useState<Coupon[] | null>(null)
+  const [form, setForm] = useState(EMPTY_COUPON)
+  const [msg, setMsg] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const reload = useCallback(() => {
+    getAdminCoupons(token)
+      .then(setCoupons)
+      .catch((e) => setError((e as Error).message))
+  }, [token])
+  useEffect(() => {
+    reload()
+  }, [reload])
+
+  const num = (s: string) => (s.trim() === '' ? null : Number(s))
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    setMsg(null)
+    setError(null)
+    setBusy(true)
+    const payload: NewCoupon = {
+      code: form.code,
+      type: form.type,
+      value: Number(form.value),
+      minAmount: num(form.minAmount),
+      maxDiscount: form.type === 'PERCENT' ? num(form.maxDiscount) : null,
+      firstBookingOnly: form.firstBookingOnly,
+      active: form.active,
+      expiresAt: null,
+      maxRedemptions: num(form.maxRedemptions),
+    }
+    try {
+      const c = await createCoupon(token, payload)
+      setMsg(`Created ${c.code}.`)
+      setForm(EMPTY_COUPON)
+      reload()
+    } catch (err) {
+      setError((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function remove(c: Coupon) {
+    if (!window.confirm(`Delete coupon ${c.code}?`)) return
+    setError(null)
+    try {
+      await deleteCoupon(token, c.id)
+      reload()
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
+
+  return (
+    <>
+      <form onSubmit={submit} className="card" style={{ marginBottom: 20 }}>
+        <h3 style={{ marginTop: 0 }}>Create a coupon</h3>
+
+        <div className="form-row">
+          <label className="label" style={{ flex: 2 }}>
+            Code
+            <input className="field" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="WELCOME500" required />
+          </label>
+          <label className="label" style={{ flex: 1 }}>
+            Type
+            <select className="field" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as CouponType })}>
+              <option value="FLAT">FLAT (₹ off)</option>
+              <option value="PERCENT">PERCENT (% off)</option>
+            </select>
+          </label>
+          <label className="label" style={{ flex: 1 }}>
+            {form.type === 'FLAT' ? 'Amount (₹)' : 'Percent (%)'}
+            <input className="field" type="number" min={1} value={form.value} onChange={(e) => setForm({ ...form, value: Number(e.target.value) })} required />
+          </label>
+        </div>
+
+        <div className="form-row">
+          <label className="label" style={{ flex: 1 }}>
+            Min order (₹, optional)
+            <input className="field" type="number" min={0} value={form.minAmount} onChange={(e) => setForm({ ...form, minAmount: e.target.value })} />
+          </label>
+          {form.type === 'PERCENT' && (
+            <label className="label" style={{ flex: 1 }}>
+              Max discount (₹, optional)
+              <input className="field" type="number" min={0} value={form.maxDiscount} onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })} />
+            </label>
+          )}
+          <label className="label" style={{ flex: 1 }}>
+            Max redemptions (optional)
+            <input className="field" type="number" min={1} value={form.maxRedemptions} onChange={(e) => setForm({ ...form, maxRedemptions: e.target.value })} />
+          </label>
+        </div>
+
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', margin: '4px 0 12px', fontSize: 14 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input type="checkbox" checked={form.firstBookingOnly} onChange={(e) => setForm({ ...form, firstBookingOnly: e.target.checked })} />
+            First booking only
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+            Active
+          </label>
+        </div>
+
+        {msg && <p className="alert alert-success" style={{ marginBottom: 12 }}>{msg}</p>}
+        {error && <p className="alert alert-error" style={{ marginBottom: 12 }}>{error}</p>}
+
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {busy ? 'Saving…' : 'Create coupon'}
+        </button>
+      </form>
+
+      {!coupons ? (
+        <p style={{ color: 'var(--muted)' }}>Loading…</p>
+      ) : coupons.length === 0 ? (
+        <p style={{ color: 'var(--muted)' }}>No coupons yet — create one above.</p>
+      ) : (
+        <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Discount</th>
+                <th>Min order</th>
+                <th>First-booking</th>
+                <th>Active</th>
+                <th>Used</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {coupons.map((c) => (
+                <tr key={c.id}>
+                  <td><strong>{c.code}</strong></td>
+                  <td>{c.type === 'FLAT' ? inr(c.value) : `${c.value}%${c.maxDiscount ? ` (max ${inr(c.maxDiscount)})` : ''}`}</td>
+                  <td>{c.minAmount ? inr(c.minAmount) : '—'}</td>
+                  <td>{c.firstBookingOnly ? 'Yes' : 'No'}</td>
+                  <td>{c.active ? 'Yes' : 'No'}</td>
+                  <td>{c.timesRedeemed}{c.maxRedemptions ? ` / ${c.maxRedemptions}` : ''}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <button className="btn btn-danger" onClick={() => remove(c)}>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  )
+}
+
 // ---- Page shell ----------------------------------------------------------
 export default function AdminPage() {
   const { user } = useAuth()
@@ -658,6 +831,7 @@ export default function AdminPage() {
       {tab === 'bookings' && <BookingsTab token={user.token} />}
       {tab === 'listings' && <ListingsTab token={user.token} />}
       {tab === 'trips' && <TripsTab token={user.token} />}
+      {tab === 'coupons' && <CouponsTab token={user.token} />}
     </div>
   )
 }

@@ -71,6 +71,22 @@ export interface TripBooking {
   status: BookingStatus
 }
 
+export type CouponType = 'FLAT' | 'PERCENT'
+
+export interface Coupon {
+  id: number
+  code: string
+  type: CouponType
+  value: number
+  minAmount: number | null
+  maxDiscount: number | null
+  firstBookingOnly: boolean
+  active: boolean
+  expiresAt: string | null
+  maxRedemptions: number | null
+  timesRedeemed: number
+}
+
 // Overview numbers for the admin dashboard (mirrors backend AdminStats).
 export interface AdminStats {
   totalBookings: number

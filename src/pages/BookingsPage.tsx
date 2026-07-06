@@ -28,6 +28,8 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busyKey, setBusyKey] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [coupons, setCoupons] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!user) {
@@ -58,14 +60,18 @@ export default function BookingsPage() {
   async function payTrip(t: TripBooking) {
     setBusyKey(`trip-${t.id}`)
     setError(null)
+    setNotice(null)
     try {
-      const order = await createTripPaymentOrder(user!.token, t.id)
+      const order = await createTripPaymentOrder(user!.token, t.id, coupons[`trip-${t.id}`]?.trim() || undefined)
       await payWithRazorpay({
         order,
         user: { email: user!.email, name: user!.name },
         description: t.packageTitle,
         verify: (r) => verifyTripPayment(user!.token, r),
-        onSuccess: () => patchTrip(t.id, { status: 'CONFIRMED' }),
+        onSuccess: () => {
+          patchTrip(t.id, { status: 'CONFIRMED' })
+          if (order.discount > 0) setNotice(`Paid — saved ${inr(order.discount / 100)} with ${order.couponCode}.`)
+        },
         onError: (m) => setError(m),
       })
     } catch (err) {
@@ -94,14 +100,18 @@ export default function BookingsPage() {
   async function payBooking(b: Booking) {
     setBusyKey(`bk-${b.id}`)
     setError(null)
+    setNotice(null)
     try {
-      const order = await createPaymentOrder(user!.token, b.id)
+      const order = await createPaymentOrder(user!.token, b.id, coupons[`bk-${b.id}`]?.trim() || undefined)
       await payWithRazorpay({
         order,
         user: { email: user!.email, name: user!.name },
         description: b.listingTitle,
         verify: (r) => verifyPayment(user!.token, r),
-        onSuccess: () => patchBooking(b.id, { status: 'CONFIRMED' }),
+        onSuccess: () => {
+          patchBooking(b.id, { status: 'CONFIRMED' })
+          if (order.discount > 0) setNotice(`Paid — saved ${inr(order.discount / 100)} with ${order.couponCode}.`)
+        },
         onError: (m) => setError(m),
       })
     } catch (err) {
@@ -135,6 +145,7 @@ export default function BookingsPage() {
 
       {loading && <p style={{ color: 'var(--muted)' }}>Loading…</p>}
       {error && <div className="alert alert-error" style={{ marginBottom: 14 }}>{error}</div>}
+      {notice && <div className="alert alert-success" style={{ marginBottom: 14 }}>{notice}</div>}
 
       {trips.length > 0 && (
         <>
@@ -151,7 +162,16 @@ export default function BookingsPage() {
                     Starts {t.startDate} · {t.travelers} traveller(s) · {inr(t.totalPrice)}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  {t.status === 'PENDING' && (
+                    <input
+                      className="field"
+                      style={{ width: 120, margin: 0, padding: '8px 10px' }}
+                      placeholder="Coupon"
+                      value={coupons[`trip-${t.id}`] ?? ''}
+                      onChange={(e) => setCoupons((c) => ({ ...c, [`trip-${t.id}`]: e.target.value }))}
+                    />
+                  )}
                   {t.status === 'PENDING' && (
                     <button onClick={() => payTrip(t)} disabled={busyKey === `trip-${t.id}`} className="btn btn-primary">
                       {busyKey === `trip-${t.id}` ? 'Processing…' : `Pay ${inr(t.totalPrice)}`}
@@ -182,7 +202,16 @@ export default function BookingsPage() {
                 {b.startDate} → {b.endDate} · {b.quantity} unit(s) · {inr(b.totalPrice)}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              {b.status === 'PENDING' && (
+                <input
+                  className="field"
+                  style={{ width: 120, margin: 0, padding: '8px 10px' }}
+                  placeholder="Coupon"
+                  value={coupons[`bk-${b.id}`] ?? ''}
+                  onChange={(e) => setCoupons((c) => ({ ...c, [`bk-${b.id}`]: e.target.value }))}
+                />
+              )}
               {b.status === 'PENDING' && (
                 <button onClick={() => payBooking(b)} disabled={busyKey === `bk-${b.id}`} className="btn btn-primary">
                   {busyKey === `bk-${b.id}` ? 'Processing…' : `Pay ${inr(b.totalPrice)}`}

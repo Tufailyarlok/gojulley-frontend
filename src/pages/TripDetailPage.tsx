@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { createTripBooking, createTripPaymentOrder, getTrip, verifyTripPayment } from '../api'
+import { createTripBooking, createTripPaymentOrder, getTrip, previewCoupon, verifyTripPayment } from '../api'
 import { useAuth } from '../auth'
 import { payWithRazorpay } from '../razorpay'
 import type { TripPackage } from '../types'
@@ -18,6 +18,10 @@ export default function TripDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
+  const [coupon, setCoupon] = useState('')
+  const [discount, setDiscount] = useState(0)
+  const [couponMsg, setCouponMsg] = useState<string | null>(null)
+  const [applying, setApplying] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -27,6 +31,31 @@ export default function TripDetailPage() {
   }, [id])
 
   const total = useMemo(() => (trip ? trip.pricePerPerson * travelers : 0), [trip, travelers])
+
+  function resetCoupon() {
+    setDiscount(0)
+    setCouponMsg(null)
+  }
+
+  async function applyCoupon() {
+    if (!user) {
+      navigate('/login')
+      return
+    }
+    if (!coupon.trim() || !trip) return
+    setCouponMsg(null)
+    setApplying(true)
+    try {
+      const p = await previewCoupon(user.token, coupon.trim(), total)
+      setDiscount(p.discount)
+      setCouponMsg(p.message)
+    } catch (err) {
+      setDiscount(0)
+      setCouponMsg((err as Error).message)
+    } finally {
+      setApplying(false)
+    }
+  }
 
   async function bookAndPay() {
     if (!user) {
@@ -42,7 +71,7 @@ export default function TripDetailPage() {
     setBusy(true)
     try {
       const booking = await createTripBooking(user.token, { packageId: trip.id, startDate, travelers })
-      const order = await createTripPaymentOrder(user.token, booking.id)
+      const order = await createTripPaymentOrder(user.token, booking.id, coupon.trim() || undefined)
       await payWithRazorpay({
         order,
         user: { email: user.email, name: user.name },
@@ -150,17 +179,49 @@ export default function TripDetailPage() {
                     type="number"
                     min={1}
                     value={travelers}
-                    onChange={(e) => setTravelers(Math.max(1, Number(e.target.value)))}
+                    onChange={(e) => {
+                      setTravelers(Math.max(1, Number(e.target.value)))
+                      resetCoupon()
+                    }}
                   />
                 </label>
               </div>
-              <div className="summary">
-                {inr(trip.pricePerPerson)} × {travelers} ={' '}
-                <strong style={{ color: 'var(--ink)' }}>{inr(total)}</strong>
+
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                <label className="label" style={{ flex: 1, marginBottom: 0 }}>
+                  Coupon code
+                  <input
+                    className="field"
+                    value={coupon}
+                    onChange={(e) => {
+                      setCoupon(e.target.value)
+                      resetCoupon()
+                    }}
+                    placeholder="e.g. WELCOME500"
+                  />
+                </label>
+                <button type="button" className="btn btn-outline" disabled={applying || !coupon.trim()} onClick={applyCoupon}>
+                  {applying ? '…' : 'Apply'}
+                </button>
+              </div>
+              {couponMsg && (
+                <p className="section-sub" style={{ margin: '6px 0 0', color: discount > 0 ? 'var(--ok)' : 'var(--danger)' }}>
+                  {couponMsg}
+                </p>
+              )}
+
+              <div className="summary" style={{ marginTop: 10 }}>
+                {inr(trip.pricePerPerson)} × {travelers} = {inr(total)}
+                {discount > 0 && (
+                  <>
+                    {' '}· <span style={{ color: 'var(--ok)' }}>− {inr(discount)}</span>
+                  </>
+                )}{' '}
+                · <strong style={{ color: 'var(--ink)' }}>Pay {inr(total - discount)}</strong>
               </div>
               {error && <p className="alert alert-error" style={{ marginTop: 12 }}>{error}</p>}
               <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} disabled={busy} onClick={bookAndPay}>
-                {busy ? 'Processing…' : user ? `Book & pay ${inr(total)}` : 'Log in to book'}
+                {busy ? 'Processing…' : user ? `Book & pay ${inr(total - discount)}` : 'Log in to book'}
               </button>
             </>
           )}
