@@ -3,6 +3,15 @@ import { createBooking } from '../api'
 import { useAuth } from '../auth'
 import type { Listing } from '../types'
 
+// Local-timezone yyyy-mm-dd (avoids the UTC off-by-one from toISOString()).
+function localISO(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function addDays(iso: string, n: number) {
+  const [y, m, d] = iso.split('-').map(Number)
+  return localISO(new Date(y, m - 1, d + n))
+}
+
 export default function BookingModal({
   listing,
   onClose,
@@ -26,10 +35,27 @@ export default function BookingModal({
   }, [startDate, endDate])
 
   const total = nights * listing.pricePerDay * quantity
+  const today = localISO(new Date())
+
+  // Works whichever date is picked first: setting check-in clears a now-invalid
+  // check-out and vice-versa. The min/max on the inputs block past dates and
+  // wrong ordering in the native picker; these guards handle typed values.
+  function onStart(v: string) {
+    setStartDate(v)
+    if (endDate && endDate <= v) setEndDate('')
+  }
+  function onEnd(v: string) {
+    setEndDate(v)
+    if (startDate && v <= startDate) setStartDate('')
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     setError(null)
+    if (!startDate || startDate < today) {
+      setError('Check-in can’t be in the past.')
+      return
+    }
     if (nights < 1) {
       setError('Check-out must be after check-in.')
       return
@@ -58,11 +84,26 @@ export default function BookingModal({
           <div className="form-row">
             <label className="label" style={{ flex: 1 }}>
               Check-in
-              <input className="field" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
+              <input
+                className="field"
+                type="date"
+                min={today}
+                max={endDate ? addDays(endDate, -1) : undefined}
+                value={startDate}
+                onChange={(e) => onStart(e.target.value)}
+                required
+              />
             </label>
             <label className="label" style={{ flex: 1 }}>
               Check-out
-              <input className="field" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
+              <input
+                className="field"
+                type="date"
+                min={startDate ? addDays(startDate, 1) : addDays(today, 1)}
+                value={endDate}
+                onChange={(e) => onEnd(e.target.value)}
+                required
+              />
             </label>
           </div>
 
