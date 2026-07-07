@@ -6,6 +6,10 @@ import { payWithRazorpay } from '../razorpay'
 import type { PublicCoupon, TripPackage } from '../types'
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
+const todayISO = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 export default function TripDetailPage() {
   const { id } = useParams()
@@ -66,8 +70,8 @@ export default function TripDetailPage() {
       navigate('/login')
       return
     }
-    if (!startDate) {
-      setError('Pick a start date.')
+    if (!startDate || startDate < todayISO()) {
+      setError('Pick a start date that isn’t in the past.')
       return
     }
     if (!trip) return
@@ -171,6 +175,7 @@ export default function TripDetailPage() {
                   <input
                     className="field"
                     type="date"
+                    min={todayISO()}
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     required
