@@ -4,6 +4,7 @@ import { getListings, getTrips } from '../api'
 import { useAuth } from '../auth'
 import BookingModal from '../components/BookingModal'
 import PhotoTile from '../components/PhotoTile'
+import { listingPhoto, tripPhoto } from '../photos'
 import type { Listing, ListingType, TripPackage } from '../types'
 
 const TYPE_META = {
@@ -123,7 +124,7 @@ export default function ListingsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
               {trips.slice(0, 3).map((t, i) => (
                 <article key={t.id} className="listing-card">
-                  <PhotoTile theme={TRIP_THEMES[i % TRIP_THEMES.length]} sun>
+                  <PhotoTile theme={TRIP_THEMES[i % TRIP_THEMES.length]} sun src={tripPhoto(t, i)} alt={t.title}>
                     <span className="ph-route">{t.durationDays} days · {t.route}</span>
                   </PhotoTile>
                   <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
@@ -164,7 +165,7 @@ export default function ListingsPage() {
                 const meta = TYPE_META[l.type]
                 return (
                   <article key={l.id} className="listing-card">
-                    <PhotoTile theme={meta.theme}>
+                    <PhotoTile theme={meta.theme} src={listingPhoto(l)} alt={l.title}>
                       <span className="ph-badge" style={{ color: meta.ink }}>{meta.badge}</span>
                     </PhotoTile>
                     <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
