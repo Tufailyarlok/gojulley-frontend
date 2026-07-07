@@ -5,6 +5,7 @@ import {
   cancelTripBooking,
   createPaymentOrder,
   createTripPaymentOrder,
+  getCoupons,
   getMyBookings,
   getMyTrips,
   verifyPayment,
@@ -12,7 +13,7 @@ import {
 } from '../api'
 import { useAuth } from '../auth'
 import { payWithRazorpay } from '../razorpay'
-import type { Booking, TripBooking } from '../types'
+import type { Booking, PublicCoupon, TripBooking } from '../types'
 
 const statusBadge: Record<Booking['status'], string> = {
   PENDING: 'badge badge-pending',
@@ -30,16 +31,18 @@ export default function BookingsPage() {
   const [busyKey, setBusyKey] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [coupons, setCoupons] = useState<Record<string, string>>({})
+  const [offers, setOffers] = useState<PublicCoupon[]>([])
 
   useEffect(() => {
     if (!user) {
       setLoading(false)
       return
     }
-    Promise.all([getMyBookings(user.token), getMyTrips(user.token)])
-      .then(([b, t]) => {
+    Promise.all([getMyBookings(user.token), getMyTrips(user.token), getCoupons(user.token)])
+      .then(([b, t, c]) => {
         setBookings(b)
         setTrips(t)
+        setOffers(c)
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false))
@@ -163,14 +166,18 @@ export default function BookingsPage() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  {t.status === 'PENDING' && (
-                    <input
+                  {t.status === 'PENDING' && offers.length > 0 && (
+                    <select
                       className="field"
-                      style={{ width: 120, margin: 0, padding: '8px 10px' }}
-                      placeholder="Coupon"
+                      style={{ width: 150, margin: 0, padding: '8px 10px' }}
                       value={coupons[`trip-${t.id}`] ?? ''}
                       onChange={(e) => setCoupons((c) => ({ ...c, [`trip-${t.id}`]: e.target.value }))}
-                    />
+                    >
+                      <option value="">No coupon</option>
+                      {offers.map((o) => (
+                        <option key={o.code} value={o.code}>{o.code}</option>
+                      ))}
+                    </select>
                   )}
                   {t.status === 'PENDING' && (
                     <button onClick={() => payTrip(t)} disabled={busyKey === `trip-${t.id}`} className="btn btn-primary">
@@ -203,14 +210,18 @@ export default function BookingsPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              {b.status === 'PENDING' && (
-                <input
+              {b.status === 'PENDING' && offers.length > 0 && (
+                <select
                   className="field"
-                  style={{ width: 120, margin: 0, padding: '8px 10px' }}
-                  placeholder="Coupon"
+                  style={{ width: 150, margin: 0, padding: '8px 10px' }}
                   value={coupons[`bk-${b.id}`] ?? ''}
                   onChange={(e) => setCoupons((c) => ({ ...c, [`bk-${b.id}`]: e.target.value }))}
-                />
+                >
+                  <option value="">No coupon</option>
+                  {offers.map((o) => (
+                    <option key={o.code} value={o.code}>{o.code}</option>
+                  ))}
+                </select>
               )}
               {b.status === 'PENDING' && (
                 <button onClick={() => payBooking(b)} disabled={busyKey === `bk-${b.id}`} className="btn btn-primary">
