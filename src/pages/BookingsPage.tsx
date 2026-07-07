@@ -8,6 +8,7 @@ import {
   getCoupons,
   getMyBookings,
   getMyTrips,
+  previewCoupon,
   verifyPayment,
   verifyTripPayment,
 } from '../api'
@@ -32,6 +33,8 @@ export default function BookingsPage() {
   const [notice, setNotice] = useState<string | null>(null)
   const [coupons, setCoupons] = useState<Record<string, string>>({})
   const [offers, setOffers] = useState<PublicCoupon[]>([])
+  const [discounts, setDiscounts] = useState<Record<string, number>>({})
+  const [couponMsgs, setCouponMsgs] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!user) {
@@ -136,6 +139,24 @@ export default function BookingsPage() {
     }
   }
 
+  // Pick a coupon -> preview the saving so the total updates live before paying.
+  async function applyItemCoupon(key: string, code: string, amount: number) {
+    setCoupons((c) => ({ ...c, [key]: code }))
+    setCouponMsgs((m) => ({ ...m, [key]: '' }))
+    if (!code) {
+      setDiscounts((d) => ({ ...d, [key]: 0 }))
+      return
+    }
+    try {
+      const p = await previewCoupon(user!.token, code, amount)
+      setDiscounts((d) => ({ ...d, [key]: p.discount }))
+      setCouponMsgs((m) => ({ ...m, [key]: p.message }))
+    } catch (err) {
+      setDiscounts((d) => ({ ...d, [key]: 0 }))
+      setCouponMsgs((m) => ({ ...m, [key]: (err as Error).message }))
+    }
+  }
+
   return (
     <div style={{ maxWidth: 820, margin: '2rem auto', padding: '0 1rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
@@ -164,6 +185,14 @@ export default function BookingsPage() {
                   <div style={{ fontSize: 14, color: 'var(--muted)', marginTop: 4 }}>
                     Starts {t.startDate} · {t.travelers} traveller(s) · {inr(t.totalPrice)}
                   </div>
+                  {discounts[`trip-${t.id}`] > 0 && (
+                    <div style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700, marginTop: 3 }}>
+                      {coupons[`trip-${t.id}`]} · −{inr(discounts[`trip-${t.id}`])} → pay {inr(t.totalPrice - discounts[`trip-${t.id}`])}
+                    </div>
+                  )}
+                  {couponMsgs[`trip-${t.id}`] && !(discounts[`trip-${t.id}`] > 0) && (
+                    <div style={{ fontSize: 13, color: 'var(--danger)', marginTop: 3 }}>{couponMsgs[`trip-${t.id}`]}</div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   {t.status === 'PENDING' && offers.length > 0 && (
@@ -171,7 +200,7 @@ export default function BookingsPage() {
                       className="field"
                       style={{ width: 150, margin: 0, padding: '8px 10px' }}
                       value={coupons[`trip-${t.id}`] ?? ''}
-                      onChange={(e) => setCoupons((c) => ({ ...c, [`trip-${t.id}`]: e.target.value }))}
+                      onChange={(e) => applyItemCoupon(`trip-${t.id}`, e.target.value, t.totalPrice)}
                     >
                       <option value="">No coupon</option>
                       {offers.map((o) => (
@@ -181,7 +210,7 @@ export default function BookingsPage() {
                   )}
                   {t.status === 'PENDING' && (
                     <button onClick={() => payTrip(t)} disabled={busyKey === `trip-${t.id}`} className="btn btn-primary">
-                      {busyKey === `trip-${t.id}` ? 'Processing…' : `Pay ${inr(t.totalPrice)}`}
+                      {busyKey === `trip-${t.id}` ? 'Processing…' : `Pay ${inr(t.totalPrice - (discounts[`trip-${t.id}`] || 0))}`}
                     </button>
                   )}
                   {t.status !== 'CANCELLED' && (
@@ -208,6 +237,14 @@ export default function BookingsPage() {
               <div style={{ fontSize: 14, color: 'var(--muted)', marginTop: 4 }}>
                 {b.startDate} → {b.endDate} · {b.quantity} unit(s) · {inr(b.totalPrice)}
               </div>
+              {discounts[`bk-${b.id}`] > 0 && (
+                <div style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700, marginTop: 3 }}>
+                  {coupons[`bk-${b.id}`]} · −{inr(discounts[`bk-${b.id}`])} → pay {inr(b.totalPrice - discounts[`bk-${b.id}`])}
+                </div>
+              )}
+              {couponMsgs[`bk-${b.id}`] && !(discounts[`bk-${b.id}`] > 0) && (
+                <div style={{ fontSize: 13, color: 'var(--danger)', marginTop: 3 }}>{couponMsgs[`bk-${b.id}`]}</div>
+              )}
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               {b.status === 'PENDING' && offers.length > 0 && (
@@ -215,7 +252,7 @@ export default function BookingsPage() {
                   className="field"
                   style={{ width: 150, margin: 0, padding: '8px 10px' }}
                   value={coupons[`bk-${b.id}`] ?? ''}
-                  onChange={(e) => setCoupons((c) => ({ ...c, [`bk-${b.id}`]: e.target.value }))}
+                  onChange={(e) => applyItemCoupon(`bk-${b.id}`, e.target.value, b.totalPrice)}
                 >
                   <option value="">No coupon</option>
                   {offers.map((o) => (
@@ -225,7 +262,7 @@ export default function BookingsPage() {
               )}
               {b.status === 'PENDING' && (
                 <button onClick={() => payBooking(b)} disabled={busyKey === `bk-${b.id}`} className="btn btn-primary">
-                  {busyKey === `bk-${b.id}` ? 'Processing…' : `Pay ${inr(b.totalPrice)}`}
+                  {busyKey === `bk-${b.id}` ? 'Processing…' : `Pay ${inr(b.totalPrice - (discounts[`bk-${b.id}`] || 0))}`}
                 </button>
               )}
               {b.status !== 'CANCELLED' && (
