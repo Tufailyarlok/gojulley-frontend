@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { createTripBooking, createTripPaymentOrder, getCoupons, getTrip, previewCoupon, verifyTripPayment } from '../api'
 import { useAuth } from '../auth'
 import { payWithRazorpay } from '../razorpay'
+import { tripPhoto } from '../photos'
 import type { PublicCoupon, TripPackage } from '../types'
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
@@ -119,6 +120,10 @@ export default function TripDetailPage() {
       </div>
       <h2 className="section-title" style={{ margin: '8px 0 4px' }}>{trip.title}</h2>
       <p className="section-sub" style={{ marginTop: 0 }}>{trip.summary}</p>
+
+      <div style={{ marginTop: 14, borderRadius: 16, overflow: 'hidden', aspectRatio: '21 / 9', background: 'var(--surface)' }}>
+        <img src={tripPhoto(trip)} alt={trip.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      </div>
 
       <div style={{ display: 'grid', gap: 20, marginTop: 12 }}>
         <div className="card">

@@ -1,8 +1,7 @@
-import { useId, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 
-// Stylized gradient + mountain-ridge "photo" for cards. Real photos would slot
-// in here later (image field on listings/trips); until then these read as
-// tasteful placeholders keyed to a colour theme.
+// Card "photo": shows a real image when `src` is given, with a stylized
+// gradient + mountain-ridge fallback (also shown while loading or on error).
 type Theme = 'blue' | 'green' | 'amber' | 'purple' | 'teal' | 'slate'
 
 const THEMES: Record<Theme, [string, string]> = {
@@ -17,13 +16,18 @@ const THEMES: Record<Theme, [string, string]> = {
 export default function PhotoTile({
   theme = 'blue',
   sun = false,
+  src,
+  alt = '',
   children,
 }: {
   theme?: Theme
   sun?: boolean
+  src?: string
+  alt?: string
   children?: ReactNode
 }) {
   const id = useId().replace(/:/g, '')
+  const [failed, setFailed] = useState(false)
   const [c1, c2] = THEMES[theme]
   return (
     <div className="photo">
@@ -39,6 +43,9 @@ export default function PhotoTile({
         <polygon points="0,250 0,150 110,95 220,160 300,110 400,150 400,250" fill="#0e2450" opacity="0.55" />
         <polygon points="0,250 0,200 140,150 260,205 360,165 400,190 400,250" fill="#0a1c40" opacity="0.9" />
       </svg>
+      {src && !failed && (
+        <img className="photo-img" src={src} alt={alt} loading="lazy" onError={() => setFailed(true)} />
+      )}
       {children}
     </div>
   )
