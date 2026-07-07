@@ -1,7 +1,7 @@
 // One place for all backend calls. Vite proxies /api/* to the Spring Boot
 // server (see vite.config.ts), so we use relative URLs here.
 
-import type { AdminStats, Booking, Listing, ListingType, TripBooking, TripPackage } from './types'
+import type { AdminStats, Booking, Coupon, Listing, ListingType, TripBooking, TripPackage } from './types'
 
 // Local dev: VITE_API_URL is unset, so calls go to '/api/v1' (Vite proxy).
 // Production: set VITE_API_URL to the backend's public URL at build time.
@@ -37,11 +37,14 @@ export interface NewBooking {
 
 export interface PaymentOrder {
   razorpayOrderId: string
-  amount: number // paise
+  amount: number // final amount to pay, in paise (after discount)
   currency: string
   keyId: string
   bookingId: number
   real: boolean // false => mock (skip the gateway popup)
+  originalAmount: number // pre-discount, paise
+  discount: number // paise (0 if no coupon)
+  couponCode: string | null
 }
 
 // Error that also carries the HTTP status, so callers can branch on it.
@@ -204,9 +207,9 @@ export async function cancelTripBooking(token: string, id: number): Promise<Trip
   )
 }
 
-export async function createTripPaymentOrder(token: string, tripBookingId: number): Promise<PaymentOrder> {
+export async function createTripPaymentOrder(token: string, tripBookingId: number, couponCode?: string): Promise<PaymentOrder> {
   return handle<PaymentOrder>(
-    await authedFetch(token, `${BASE}/trip-payments/order`, { method: 'POST', body: JSON.stringify({ tripBookingId }) }),
+    await authedFetch(token, `${BASE}/trip-payments/order`, { method: 'POST', body: JSON.stringify({ tripBookingId, couponCode }) }),
   )
 }
 
@@ -253,6 +256,47 @@ export async function deleteTripPackage(token: string, id: number): Promise<void
   return handleNoBody(await authedFetch(token, `${BASE}/admin/trips/${id}`, { method: 'DELETE' }))
 }
 
+// --- Coupons ---
+export interface CouponPreview {
+  code: string
+  discount: number
+  finalAmount: number
+  message: string
+}
+
+export interface NewCoupon {
+  code: string
+  type: 'FLAT' | 'PERCENT'
+  value: number
+  minAmount: number | null
+  maxDiscount: number | null
+  firstBookingOnly: boolean
+  active: boolean
+  expiresAt: string | null
+  maxRedemptions: number | null
+}
+
+/** Customer preview: does this code work on this total, and what's the saving? */
+export async function previewCoupon(token: string, code: string, amount: number): Promise<CouponPreview> {
+  return handle<CouponPreview>(
+    await authedFetch(token, `${BASE}/coupons/preview`, { method: 'POST', body: JSON.stringify({ code, amount }) }),
+  )
+}
+
+export async function getAdminCoupons(token: string): Promise<Coupon[]> {
+  return handle<Coupon[]>(await authedFetch(token, `${BASE}/admin/coupons`))
+}
+
+export async function createCoupon(token: string, data: NewCoupon): Promise<Coupon> {
+  return handle<Coupon>(
+    await authedFetch(token, `${BASE}/admin/coupons`, { method: 'POST', body: JSON.stringify(data) }),
+  )
+}
+
+export async function deleteCoupon(token: string, id: number): Promise<void> {
+  return handleNoBody(await authedFetch(token, `${BASE}/admin/coupons/${id}`, { method: 'DELETE' }))
+}
+
 // --- Admin dashboard ---
 export async function getAdminStats(token: string): Promise<AdminStats> {
   return handle<AdminStats>(await authedFetch(token, `${BASE}/admin/stats`))
@@ -273,9 +317,9 @@ export async function cancelBooking(token: string, id: number): Promise<Booking>
 }
 
 // --- Payments (Razorpay) ---
-export async function createPaymentOrder(token: string, bookingId: number): Promise<PaymentOrder> {
+export async function createPaymentOrder(token: string, bookingId: number, couponCode?: string): Promise<PaymentOrder> {
   return handle<PaymentOrder>(
-    await authedFetch(token, `${BASE}/payments/order`, { method: 'POST', body: JSON.stringify({ bookingId }) }),
+    await authedFetch(token, `${BASE}/payments/order`, { method: 'POST', body: JSON.stringify({ bookingId, couponCode }) }),
   )
 }
 
