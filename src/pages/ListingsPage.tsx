@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { getListings } from '../api'
+import { Link, useNavigate } from 'react-router-dom'
+import { getListings, getTrips } from '../api'
 import { useAuth } from '../auth'
 import BookingModal from '../components/BookingModal'
-import type { Listing, ListingType } from '../types'
+import type { Listing, ListingType, TripPackage } from '../types'
 
 const TYPE_META: Record<ListingType, { label: string; tint: string; ink: string }> = {
   HOTEL: { label: 'Hotels', tint: '#eff6ff', ink: '#1d4ed8' },
@@ -24,6 +24,7 @@ export default function ListingsPage() {
   const [filter, setFilter] = useState<Filter>('ALL')
   const [booking, setBooking] = useState<Listing | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
+  const [trips, setTrips] = useState<TripPackage[]>([])
 
   function load() {
     getListings()
@@ -34,6 +35,9 @@ export default function ListingsPage() {
 
   useEffect(() => {
     load()
+    getTrips()
+      .then(setTrips)
+      .catch(() => {}) // trips are a bonus on the home page; ignore failures
   }, [])
 
   const visible = useMemo(
@@ -72,7 +76,41 @@ export default function ListingsPage() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '1.75rem 0 1.5rem' }}>
+      {trips.length > 0 && (
+        <section style={{ marginTop: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            <div>
+              <h2 className="section-title" style={{ margin: 0 }}>Curated trips — the whole thing, handled</h2>
+              <p className="section-sub" style={{ margin: '2px 0 0' }}>Stays, rides, permits &amp; support in one booking.</p>
+            </div>
+            <Link to="/trips" className="nav-link">See all trips →</Link>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16, marginTop: 14 }}>
+            {trips.slice(0, 3).map((t) => (
+              <div key={t.id} className="card" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <span className="type-badge">
+                  {t.durationDays} days · {t.route}
+                </span>
+                <h3 style={{ margin: '4px 0 0', fontSize: 16 }}>{t.title}</h3>
+                <p style={{ color: 'var(--muted)', fontSize: 13, margin: 0, flex: 1 }}>{t.summary}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6 }}>
+                  <strong>
+                    ₹{t.pricePerPerson.toLocaleString('en-IN')}
+                    <span style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 12 }}> /person</span>
+                  </strong>
+                  <Link to={`/trips/${t.id}`} className="btn btn-primary" style={{ padding: '6px 14px' }}>
+                    View
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <h2 className="section-title" style={{ margin: '2.25rem 0 0.25rem' }}>Or book individual stays &amp; rides</h2>
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '1rem 0 1.5rem' }}>
         {filters.map((f) => {
           const active = filter === f
           return (
