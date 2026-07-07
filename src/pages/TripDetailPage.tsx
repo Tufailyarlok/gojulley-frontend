@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { createTripBooking, createTripPaymentOrder, getTrip, previewCoupon, verifyTripPayment } from '../api'
+import { createTripBooking, createTripPaymentOrder, getCoupons, getTrip, previewCoupon, verifyTripPayment } from '../api'
 import { useAuth } from '../auth'
 import { payWithRazorpay } from '../razorpay'
-import type { TripPackage } from '../types'
+import type { PublicCoupon, TripPackage } from '../types'
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
 
@@ -22,6 +22,7 @@ export default function TripDetailPage() {
   const [discount, setDiscount] = useState(0)
   const [couponMsg, setCouponMsg] = useState<string | null>(null)
   const [applying, setApplying] = useState(false)
+  const [offers, setOffers] = useState<PublicCoupon[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -30,6 +31,13 @@ export default function TripDetailPage() {
       .catch((e) => setError((e as Error).message))
   }, [id])
 
+  useEffect(() => {
+    if (!user) return
+    getCoupons(user.token)
+      .then(setOffers)
+      .catch(() => {})
+  }, [user])
+
   const total = useMemo(() => (trip ? trip.pricePerPerson * travelers : 0), [trip, travelers])
 
   function resetCoupon() {
@@ -37,16 +45,12 @@ export default function TripDetailPage() {
     setCouponMsg(null)
   }
 
-  async function applyCoupon() {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-    if (!coupon.trim() || !trip) return
+  async function applyCode(code: string, amount = total) {
+    if (!user || !trip || !code) return
     setCouponMsg(null)
     setApplying(true)
     try {
-      const p = await previewCoupon(user.token, coupon.trim(), total)
+      const p = await previewCoupon(user.token, code, amount)
       setDiscount(p.discount)
       setCouponMsg(p.message)
     } catch (err) {
@@ -180,33 +184,40 @@ export default function TripDetailPage() {
                     min={1}
                     value={travelers}
                     onChange={(e) => {
-                      setTravelers(Math.max(1, Number(e.target.value)))
-                      resetCoupon()
+                      const t = Math.max(1, Number(e.target.value))
+                      setTravelers(t)
+                      if (coupon && trip) applyCode(coupon, trip.pricePerPerson * t)
+                      else resetCoupon()
                     }}
                   />
                 </label>
               </div>
 
-              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
-                <label className="label" style={{ flex: 1, marginBottom: 0 }}>
-                  Coupon code
-                  <input
+              {offers.length > 0 && (
+                <label className="label">
+                  Coupon
+                  <select
                     className="field"
                     value={coupon}
                     onChange={(e) => {
-                      setCoupon(e.target.value)
-                      resetCoupon()
+                      const code = e.target.value
+                      setCoupon(code)
+                      if (code) applyCode(code)
+                      else resetCoupon()
                     }}
-                    placeholder="e.g. WELCOME500"
-                  />
+                  >
+                    <option value="">No coupon</option>
+                    {offers.map((o) => (
+                      <option key={o.code} value={o.code}>
+                        {o.code} — {o.description}
+                      </option>
+                    ))}
+                  </select>
                 </label>
-                <button type="button" className="btn btn-outline" disabled={applying || !coupon.trim()} onClick={applyCoupon}>
-                  {applying ? '…' : 'Apply'}
-                </button>
-              </div>
-              {couponMsg && (
-                <p className="section-sub" style={{ margin: '6px 0 0', color: discount > 0 ? 'var(--ok)' : 'var(--danger)' }}>
-                  {couponMsg}
+              )}
+              {(applying || couponMsg) && (
+                <p className="section-sub" style={{ margin: '6px 0 0', color: applying ? 'var(--faint)' : discount > 0 ? 'var(--ok)' : 'var(--danger)' }}>
+                  {applying ? 'Checking…' : couponMsg}
                 </p>
               )}
 

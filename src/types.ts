@@ -73,6 +73,13 @@ export interface TripBooking {
 
 export type CouponType = 'FLAT' | 'PERCENT'
 
+// A coupon offer shown to customers in the checkout dropdown.
+export interface PublicCoupon {
+  code: string
+  description: string
+  firstBookingOnly: boolean
+}
+
 export interface Coupon {
   id: number
   code: string
