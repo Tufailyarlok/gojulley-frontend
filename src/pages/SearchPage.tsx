@@ -4,6 +4,7 @@ import { getListings, getReviewSummaries, getTrips } from '../api'
 import ListingCard from '../components/ListingCard'
 import TripCard from '../components/TripCard'
 import { addDays, todayISO } from '../dates'
+import { placePhoto } from '../photos'
 import type { Listing, ReviewSummary, TripPackage } from '../types'
 
 const CATEGORIES = [
@@ -67,7 +68,7 @@ export default function SearchPage() {
   return (
     <>
       <div style={{ position: 'relative', height: 200, overflow: 'hidden' }}>
-        <img src="/photos/ladakh7.jpg" alt="Ladakh" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <img src={placePhoto(destination)} alt={destination || 'Ladakh'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(3,7,18,0.15), rgba(3,7,18,0.72))' }} />
         <div className="page" style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', paddingBottom: 20 }}>
           <Link to="/" style={{ color: '#dbe4ff', fontSize: 13, fontWeight: 700 }}>← Home</Link>

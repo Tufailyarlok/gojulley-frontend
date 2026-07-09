@@ -33,7 +33,7 @@ export default function TripsPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
         {trips?.map((t, i) => (
           <article key={t.id} className="listing-card">
-            <PhotoTile theme={THEMES[i % THEMES.length]} sun src={tripPhoto(t, i)} alt={t.title}>
+            <PhotoTile theme={THEMES[i % THEMES.length]} sun src={tripPhoto(t)} alt={t.title}>
               <span className="ph-route">{t.durationDays} days · {t.route}</span>
             </PhotoTile>
             <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
