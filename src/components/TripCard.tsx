@@ -9,7 +9,7 @@ const TRIP_THEMES = ['blue', 'amber', 'teal', 'green', 'purple'] as const
 export default function TripCard({ trip: t, index = 0 }: { trip: TripPackage; index?: number }) {
   return (
     <article className="listing-card">
-      <PhotoTile theme={TRIP_THEMES[index % TRIP_THEMES.length]} sun src={tripPhoto(t, index)} alt={t.title}>
+      <PhotoTile theme={TRIP_THEMES[index % TRIP_THEMES.length]} sun src={tripPhoto(t)} alt={t.title}>
         <span className="ph-route">{t.durationDays} days · {t.route}</span>
       </PhotoTile>
       <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
