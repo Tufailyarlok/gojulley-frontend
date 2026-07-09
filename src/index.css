@@ -262,6 +262,7 @@ a { color: inherit; text-decoration: none; }
 .modal-card {
   background: #fff; border-radius: 18px; box-shadow: var(--shadow-lg);
   padding: 26px; width: 100%; max-width: 460px; animation: pop 0.18s ease;
+  max-height: 90vh; overflow-y: auto;
 }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }

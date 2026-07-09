@@ -71,6 +71,21 @@ export interface TripBooking {
   status: BookingStatus
 }
 
+export interface Review {
+  id: number
+  listingId: number
+  userName: string
+  rating: number
+  comment: string | null
+  createdAt: string
+}
+
+export interface ReviewSummary {
+  listingId: number
+  average: number
+  count: number
+}
+
 export type CouponType = 'FLAT' | 'PERCENT'
 
 // A coupon offer shown to customers in the checkout dropdown.
