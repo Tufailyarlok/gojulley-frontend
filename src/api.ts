@@ -1,7 +1,7 @@
 // One place for all backend calls. Vite proxies /api/* to the Spring Boot
 // server (see vite.config.ts), so we use relative URLs here.
 
-import type { AdminStats, Booking, Coupon, Listing, ListingType, PublicCoupon, TripBooking, TripPackage } from './types'
+import type { AdminStats, Booking, Coupon, Listing, ListingType, PublicCoupon, Review, ReviewSummary, TripBooking, TripPackage } from './types'
 
 // Local dev: VITE_API_URL is unset, so calls go to '/api/v1' (Vite proxy).
 // Production: set VITE_API_URL to the backend's public URL at build time.
@@ -300,6 +300,24 @@ export async function createCoupon(token: string, data: NewCoupon): Promise<Coup
 
 export async function deleteCoupon(token: string, id: number): Promise<void> {
   return handleNoBody(await authedFetch(token, `${BASE}/admin/coupons/${id}`, { method: 'DELETE' }))
+}
+
+// --- Reviews ---
+export async function getReviewSummaries(): Promise<ReviewSummary[]> {
+  return handle<ReviewSummary[]>(await fetch(`${BASE}/reviews/summary`))
+}
+
+export async function getReviews(listingId: number): Promise<Review[]> {
+  return handle<Review[]>(await fetch(`${BASE}/reviews?listingId=${listingId}`))
+}
+
+export async function createReview(
+  token: string,
+  data: { listingId: number; rating: number; comment: string },
+): Promise<Review> {
+  return handle<Review>(
+    await authedFetch(token, `${BASE}/reviews`, { method: 'POST', body: JSON.stringify(data) }),
+  )
 }
 
 // --- Admin dashboard ---

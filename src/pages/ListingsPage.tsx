@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getListings, getTrips } from '../api'
+import { getListings, getReviewSummaries, getTrips } from '../api'
 import { useAuth } from '../auth'
 import BookingModal from '../components/BookingModal'
 import PhotoTile from '../components/PhotoTile'
+import Stars from '../components/Stars'
 import { listingPhoto, tripPhoto } from '../photos'
-import type { Listing, ListingType, TripPackage } from '../types'
+import type { Listing, ListingType, ReviewSummary, TripPackage } from '../types'
 
 // Local-timezone yyyy-mm-dd date helpers (no UTC off-by-one).
 function localISO(d: Date) {
@@ -42,6 +43,7 @@ export default function ListingsPage() {
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [travellers, setTravellers] = useState(2)
+  const [reviewSummaries, setReviewSummaries] = useState<Record<number, ReviewSummary>>({})
   const today = localISO(new Date())
 
   function load() {
@@ -55,6 +57,9 @@ export default function ListingsPage() {
     load()
     getTrips()
       .then(setTrips)
+      .catch(() => {})
+    getReviewSummaries()
+      .then((list) => setReviewSummaries(Object.fromEntries(list.map((s) => [s.listingId, s]))))
       .catch(() => {})
   }, [])
 
@@ -234,6 +239,15 @@ export default function ListingsPage() {
                     <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
                       <span className="type-badge" style={{ background: meta.tint, color: meta.ink }}>{l.location}</span>
                       <h3 style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.25 }}>{l.title}</h3>
+                      {reviewSummaries[l.id] ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+                          <Stars value={reviewSummaries[l.id].average} size={14} />
+                          <strong style={{ color: 'var(--ink)' }}>{reviewSummaries[l.id].average.toFixed(1)}</strong>
+                          <span style={{ color: 'var(--faint)' }}>({reviewSummaries[l.id].count})</span>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: 12.5, color: 'var(--faint)' }}>No reviews yet</div>
+                      )}
                       <p style={{ fontSize: 13.5, color: 'var(--muted)', margin: 0, flex: 1 }}>{l.description}</p>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
                         <div>

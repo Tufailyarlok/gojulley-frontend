@@ -1,7 +1,8 @@
-import { useMemo, useState, type FormEvent } from 'react'
-import { createBooking } from '../api'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { createBooking, createReview, getReviews } from '../api'
 import { useAuth } from '../auth'
-import type { Listing } from '../types'
+import Stars from './Stars'
+import type { Listing, Review } from '../types'
 
 // Local-timezone yyyy-mm-dd (avoids the UTC off-by-one from toISOString()).
 function localISO(d: Date) {
@@ -33,6 +34,12 @@ export default function BookingModal({
   const [quantity, setQuantity] = useState(Math.max(1, initialQuantity))
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [revBusy, setRevBusy] = useState(false)
+  const [revError, setRevError] = useState<string | null>(null)
+  const [posted, setPosted] = useState(false)
 
   const nights = useMemo(() => {
     if (!startDate || !endDate) return 0
@@ -42,6 +49,29 @@ export default function BookingModal({
 
   const total = nights * listing.pricePerDay * quantity
   const today = localISO(new Date())
+
+  useEffect(() => {
+    getReviews(listing.id)
+      .then(setReviews)
+      .catch(() => {})
+  }, [listing.id])
+
+  const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0
+
+  async function submitReview() {
+    if (!user || rating === 0) return
+    setRevBusy(true)
+    setRevError(null)
+    try {
+      const r = await createReview(user.token, { listingId: listing.id, rating, comment })
+      setReviews((rs) => [r, ...rs])
+      setPosted(true)
+    } catch (err) {
+      setRevError((err as Error).message)
+    } finally {
+      setRevBusy(false)
+    }
+  }
 
   // Works whichever date is picked first: setting check-in clears a now-invalid
   // check-out and vice-versa. The min/max on the inputs block past dates and
@@ -148,6 +178,60 @@ export default function BookingModal({
             </button>
           </div>
         </form>
+
+        <div style={{ borderTop: '1px solid var(--line)', marginTop: 18, paddingTop: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <h4 style={{ margin: 0, fontSize: 15 }}>Reviews</h4>
+            {reviews.length > 0 && (
+              <>
+                <Stars value={avg} size={14} />
+                <span style={{ fontSize: 13, color: 'var(--faint)' }}>{avg.toFixed(1)} · {reviews.length}</span>
+              </>
+            )}
+          </div>
+
+          {reviews.length === 0 && (
+            <p style={{ fontSize: 13, color: 'var(--faint)', margin: '0 0 10px' }}>No reviews yet — be the first.</p>
+          )}
+
+          {reviews.length > 0 && (
+            <div style={{ display: 'grid', gap: 10, maxHeight: 200, overflowY: 'auto', marginBottom: 12 }}>
+              {reviews.map((r) => (
+                <div key={r.id} style={{ background: 'var(--surface)', borderRadius: 10, padding: '8px 10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <strong style={{ fontSize: 13 }}>{r.userName}</strong>
+                    <Stars value={r.rating} size={12} />
+                  </div>
+                  {r.comment && <p style={{ fontSize: 13, color: 'var(--muted)', margin: '4px 0 0' }}>{r.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {!user ? (
+            <p style={{ fontSize: 13, color: 'var(--faint)' }}>Log in to write a review.</p>
+          ) : posted ? (
+            <p style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700 }}>Thanks for your review!</p>
+          ) : (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 700 }}>Your rating</span>
+                <Stars value={rating} size={22} onChange={setRating} />
+              </div>
+              <textarea
+                className="field"
+                style={{ minHeight: 56, resize: 'vertical' }}
+                placeholder="Share a few words (optional)"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+              {revError && <p className="alert alert-error" style={{ marginTop: 8 }}>{revError}</p>}
+              <button type="button" className="btn btn-outline" style={{ marginTop: 8 }} disabled={revBusy || rating === 0} onClick={submitReview}>
+                {revBusy ? 'Posting…' : 'Post review'}
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
