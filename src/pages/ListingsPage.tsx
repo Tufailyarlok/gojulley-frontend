@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getListings, getReviewSummaries, getTrips } from '../api'
-import { useAuth } from '../auth'
-import BookingModal from '../components/BookingModal'
 import ListingCard from '../components/ListingCard'
 import TripCard from '../components/TripCard'
 import { addDays, todayISO } from '../dates'
@@ -12,15 +10,12 @@ import type { Listing, ListingType, ReviewSummary, TripPackage } from '../types'
 type Filter = 'ALL' | ListingType
 
 export default function ListingsPage() {
-  const { user } = useAuth()
   const navigate = useNavigate()
 
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('ALL')
-  const [booking, setBooking] = useState<Listing | null>(null)
-  const [flash, setFlash] = useState<string | null>(null)
   const [trips, setTrips] = useState<TripPackage[]>([])
   const [summaries, setSummaries] = useState<Record<number, ReviewSummary>>({})
 
@@ -67,20 +62,6 @@ export default function ListingsPage() {
     if (to) p.set('to', to)
     p.set('travellers', String(travellers))
     navigate(`/search?${p.toString()}`)
-  }
-
-  function onBook(l: Listing) {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-    setFlash(null)
-    setBooking(l)
-  }
-  function onBooked() {
-    setBooking(null)
-    setFlash('Reserved! Complete payment under “My bookings” to confirm.')
-    load()
   }
 
   return (
@@ -141,8 +122,6 @@ export default function ListingsPage() {
       </div>
 
       <div className="page">
-        {flash && <div className="alert alert-success" style={{ marginTop: 24 }}>{flash}</div>}
-
         {trips.length > 0 && (
           <section style={{ paddingTop: 48 }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 22 }}>
@@ -180,7 +159,7 @@ export default function ListingsPage() {
           {!loading && !error && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))', gap: 20 }}>
               {visible.map((l) => (
-                <ListingCard key={l.id} listing={l} summary={summaries[l.id]} onBook={onBook} />
+                <ListingCard key={l.id} listing={l} summary={summaries[l.id]} />
               ))}
               {visible.length === 0 && <p style={{ color: 'var(--faint)' }}>No listings for this filter yet.</p>}
             </div>
@@ -188,16 +167,6 @@ export default function ListingsPage() {
         </section>
       </div>
 
-      {booking && (
-        <BookingModal
-          listing={booking}
-          onClose={() => setBooking(null)}
-          onBooked={onBooked}
-          initialStart={from}
-          initialEnd={to}
-          initialQuantity={travellers}
-        />
-      )}
     </>
   )
 }
