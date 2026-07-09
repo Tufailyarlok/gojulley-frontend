@@ -126,6 +126,10 @@ export async function getListings(params?: {
   return handle<Listing[]>(await fetch(url))
 }
 
+export async function getListing(id: number): Promise<Listing> {
+  return handle<Listing>(await fetch(`${BASE}/listings/${id}`))
+}
+
 export async function login(email: string, password: string): Promise<AuthUser> {
   return handle<AuthUser>(
     await fetch(`${BASE}/auth/login`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email, password }) }),

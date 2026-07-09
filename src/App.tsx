@@ -9,6 +9,7 @@ import BookingsPage from './pages/BookingsPage'
 import TripsPage from './pages/TripsPage'
 import TripDetailPage from './pages/TripDetailPage'
 import SearchPage from './pages/SearchPage'
+import ListingDetailPage from './pages/ListingDetailPage'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<ListingsPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/listings/:id" element={<ListingDetailPage />} />
           <Route path="/trips" element={<TripsPage />} />
           <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/login" element={<LoginPage />} />

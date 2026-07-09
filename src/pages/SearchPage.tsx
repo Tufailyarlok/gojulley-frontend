@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getListings, getReviewSummaries, getTrips } from '../api'
-import { useAuth } from '../auth'
-import BookingModal from '../components/BookingModal'
 import ListingCard from '../components/ListingCard'
 import TripCard from '../components/TripCard'
 import { addDays, todayISO } from '../dates'
@@ -19,14 +17,10 @@ type Cat = (typeof CATEGORIES)[number]['key']
 const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 } as const
 
 export default function SearchPage() {
-  const { user } = useAuth()
-  const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const [listings, setListings] = useState<Listing[]>([])
   const [trips, setTrips] = useState<TripPackage[]>([])
   const [summaries, setSummaries] = useState<Record<number, ReviewSummary>>({})
-  const [booking, setBooking] = useState<Listing | null>(null)
-  const [flash, setFlash] = useState<string | null>(null)
 
   const destination = params.get('destination') || ''
   const from = params.get('from') || ''
@@ -41,11 +35,8 @@ export default function SearchPage() {
     setParams(next, { replace: true })
   }
 
-  function load() {
-    getListings().then(setListings).catch(() => {})
-  }
   useEffect(() => {
-    load()
+    getListings().then(setListings).catch(() => {})
     getTrips().then(setTrips).catch(() => {})
     getReviewSummaries()
       .then((l) => setSummaries(Object.fromEntries(l.map((s) => [s.listingId, s]))))
@@ -62,25 +53,11 @@ export default function SearchPage() {
   )
   const counts: Record<Cat, number> = { packages: packages.length, stays: stays.length, bikes: bikes.length, cars: cars.length, experiences: 0 }
 
-  function onBook(l: Listing) {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-    setFlash(null)
-    setBooking(l)
-  }
-  function onBooked() {
-    setBooking(null)
-    setFlash('Reserved! Complete payment under “My bookings” to confirm.')
-    load()
-  }
-
   const listingGrid = (items: Listing[], emptyMsg: string) =>
     items.length ? (
       <div style={gridStyle}>
         {items.map((l) => (
-          <ListingCard key={l.id} listing={l} summary={summaries[l.id]} onBook={onBook} />
+          <ListingCard key={l.id} listing={l} summary={summaries[l.id]} />
         ))}
       </div>
     ) : (
@@ -144,8 +121,6 @@ export default function SearchPage() {
           </label>
         </div>
 
-        {flash && <div className="alert alert-success" style={{ marginBottom: 16 }}>{flash}</div>}
-
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 22 }}>
           {CATEGORIES.map((c) => (
             <button key={c.key} className={`filter-pill${tab === c.key ? ' active' : ''}`} onClick={() => setParam({ tab: c.key })}>
@@ -174,17 +149,6 @@ export default function SearchPage() {
           </div>
         )}
       </div>
-
-      {booking && (
-        <BookingModal
-          listing={booking}
-          onClose={() => setBooking(null)}
-          onBooked={onBooked}
-          initialStart={from}
-          initialEnd={to}
-          initialQuantity={travellers}
-        />
-      )}
     </>
   )
 }

@@ -1,18 +1,11 @@
+import { Link } from 'react-router-dom'
 import PhotoTile from './PhotoTile'
 import Stars from './Stars'
 import { listingPhoto } from '../photos'
 import { TYPE_META, inr } from '../listingMeta'
 import type { Listing, ReviewSummary } from '../types'
 
-export default function ListingCard({
-  listing: l,
-  summary,
-  onBook,
-}: {
-  listing: Listing
-  summary?: ReviewSummary
-  onBook: (l: Listing) => void
-}) {
+export default function ListingCard({ listing: l, summary }: { listing: Listing; summary?: ReviewSummary }) {
   const meta = TYPE_META[l.type]
   return (
     <article className="listing-card">
@@ -41,9 +34,7 @@ export default function ListingCard({
               {l.quantity > 0 ? `${l.quantity} available` : 'Sold out'}
             </div>
           </div>
-          <button onClick={() => onBook(l)} disabled={l.quantity === 0} className="btn btn-primary">
-            {l.quantity === 0 ? 'Sold out' : 'Book now'}
-          </button>
+          <Link to={`/listings/${l.id}`} className="btn btn-primary">View details</Link>
         </div>
       </div>
     </article>
