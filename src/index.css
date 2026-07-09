@@ -121,6 +121,16 @@ a { color: inherit; text-decoration: none; }
 .field-cell label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: var(--faint); }
 .field-cell .val { font-size: 15px; font-weight: 700; color: var(--ink); }
 .field-cell .val.dim { color: var(--faint); font-weight: 400; }
+/* borderless inputs that blend into the plan bar */
+.plan-input {
+  border: 0; background: transparent; font-family: var(--font);
+  font-size: 15px; font-weight: 700; color: var(--ink); padding: 2px 0; width: 100%;
+  cursor: pointer; appearance: none; -webkit-appearance: none;
+}
+.plan-input:focus { outline: none; }
+.plan-date { font-size: 13.5px; width: auto; }
+.plan-date::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
+.plan-date:invalid, .plan-date:not(:valid) { color: var(--faint); }
 .plan-go {
   align-self: stretch; margin: 4px; min-height: 52px;
   display: inline-flex; align-items: center; gap: 8px; padding: 0 26px;

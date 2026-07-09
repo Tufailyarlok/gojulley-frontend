@@ -16,15 +16,21 @@ export default function BookingModal({
   listing,
   onClose,
   onBooked,
+  initialStart = '',
+  initialEnd = '',
+  initialQuantity = 1,
 }: {
   listing: Listing
   onClose: () => void
   onBooked: () => void
+  initialStart?: string
+  initialEnd?: string
+  initialQuantity?: number
 }) {
   const { user } = useAuth()
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [quantity, setQuantity] = useState(1)
+  const [startDate, setStartDate] = useState(initialStart)
+  const [endDate, setEndDate] = useState(initialEnd)
+  const [quantity, setQuantity] = useState(Math.max(1, initialQuantity))
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 

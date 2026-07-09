@@ -7,6 +7,15 @@ import PhotoTile from '../components/PhotoTile'
 import { listingPhoto, tripPhoto } from '../photos'
 import type { Listing, ListingType, TripPackage } from '../types'
 
+// Local-timezone yyyy-mm-dd date helpers (no UTC off-by-one).
+function localISO(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function addDays(iso: string, n: number) {
+  const [y, m, d] = iso.split('-').map(Number)
+  return localISO(new Date(y, m - 1, d + n))
+}
+
 const TYPE_META = {
   HOTEL: { label: 'Hotels', badge: 'Hotel', tint: '#eff6ff', ink: '#1d4ed8', theme: 'blue' },
   HOMESTAY: { label: 'Homestays', badge: 'Homestay', tint: '#ecfdf5', ink: '#047857', theme: 'green' },
@@ -29,6 +38,11 @@ export default function ListingsPage() {
   const [booking, setBooking] = useState<Listing | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
   const [trips, setTrips] = useState<TripPackage[]>([])
+  const [searchLocation, setSearchLocation] = useState('')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
+  const [travellers, setTravellers] = useState(2)
+  const today = localISO(new Date())
 
   function load() {
     getListings()
@@ -44,11 +58,28 @@ export default function ListingsPage() {
       .catch(() => {})
   }, [])
 
+  const locations = useMemo(() => [...new Set(listings.map((l) => l.location))].sort(), [listings])
   const visible = useMemo(
-    () => (filter === 'ALL' ? listings : listings.filter((l) => l.type === filter)),
-    [listings, filter],
+    () =>
+      listings.filter(
+        (l) => (filter === 'ALL' || l.type === filter) && (!searchLocation || l.location === searchLocation),
+      ),
+    [listings, filter, searchLocation],
+  )
+  const visibleTrips = useMemo(
+    () => (searchLocation ? trips.filter((t) => t.route.toLowerCase().includes(searchLocation.toLowerCase())) : trips),
+    [trips, searchLocation],
   )
   const filters: Filter[] = ['ALL', 'HOTEL', 'HOMESTAY', 'CAR', 'BIKE']
+
+  function onFrom(v: string) {
+    setFrom(v)
+    if (to && to <= v) setTo('')
+  }
+  function onTo(v: string) {
+    setTo(v)
+    if (from && v <= from) setFrom('')
+  }
 
   function onBook(l: Listing) {
     if (!user) {
@@ -91,19 +122,51 @@ export default function ListingsPage() {
         <div className="planbar-card">
           <div className="field-cell">
             <label>Destination</label>
-            <span className="val">Leh · Nubra · Pangong</span>
+            <select className="plan-input" value={searchLocation} onChange={(e) => setSearchLocation(e.target.value)}>
+              <option value="">Anywhere in Ladakh</option>
+              {locations.map((loc) => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
           </div>
           <div className="field-cell">
             <label>Dates</label>
-            <span className="val dim">Add your dates</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <input
+                className="plan-input plan-date"
+                type="date"
+                min={today}
+                max={to ? addDays(to, -1) : undefined}
+                value={from}
+                onChange={(e) => onFrom(e.target.value)}
+                aria-label="Check-in"
+              />
+              <span style={{ color: 'var(--faint)' }}>→</span>
+              <input
+                className="plan-input plan-date"
+                type="date"
+                min={from ? addDays(from, 1) : addDays(today, 1)}
+                value={to}
+                onChange={(e) => onTo(e.target.value)}
+                aria-label="Check-out"
+              />
+            </div>
           </div>
           <div className="field-cell">
             <label>Travellers</label>
-            <span className="val">2 adults</span>
+            <select className="plan-input" value={travellers} onChange={(e) => setTravellers(Number(e.target.value))}>
+              {[1, 2, 3, 4, 5, 6].map((n) => (
+                <option key={n} value={n}>{n} {n === 1 ? 'traveller' : 'travellers'}</option>
+              ))}
+            </select>
           </div>
-          <button className="plan-go" type="button" onClick={() => document.getElementById('trips')?.scrollIntoView()}>
+          <button
+            className="plan-go"
+            type="button"
+            onClick={() => (document.getElementById('trips') || document.getElementById('results'))?.scrollIntoView({ behavior: 'smooth' })}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-            Find trips
+            Search
           </button>
         </div>
       </div>
@@ -111,7 +174,7 @@ export default function ListingsPage() {
       <div className="page">
         {flash && <div className="alert alert-success" style={{ marginTop: 24 }}>{flash}</div>}
 
-        {trips.length > 0 && (
+        {visibleTrips.length > 0 && (
           <section id="trips" style={{ paddingTop: 48 }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 22 }}>
               <div>
@@ -122,7 +185,7 @@ export default function ListingsPage() {
               <Link to="/trips" className="nav-link" style={{ color: 'var(--navy)', whiteSpace: 'nowrap' }}>See all trips →</Link>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-              {trips.slice(0, 3).map((t, i) => (
+              {visibleTrips.slice(0, 3).map((t, i) => (
                 <article key={t.id} className="listing-card">
                   <PhotoTile theme={TRIP_THEMES[i % TRIP_THEMES.length]} sun src={tripPhoto(t, i)} alt={t.title}>
                     <span className="ph-route">{t.durationDays} days · {t.route}</span>
@@ -143,7 +206,7 @@ export default function ListingsPage() {
           </section>
         )}
 
-        <section style={{ paddingTop: 52 }}>
+        <section id="results" style={{ paddingTop: 52 }}>
           <span className="eyebrow">À la carte</span>
           <h2 className="section-title">Or book individual stays &amp; rides</h2>
           <p className="section-sub" style={{ marginBottom: 20 }}>Pick exactly what you need across Leh, Nubra and Pangong.</p>
@@ -195,7 +258,16 @@ export default function ListingsPage() {
         </section>
       </div>
 
-      {booking && <BookingModal listing={booking} onClose={() => setBooking(null)} onBooked={onBooked} />}
+      {booking && (
+        <BookingModal
+          listing={booking}
+          onClose={() => setBooking(null)}
+          onBooked={onBooked}
+          initialStart={from}
+          initialEnd={to}
+          initialQuantity={travellers}
+        />
+      )}
     </>
   )
 }
