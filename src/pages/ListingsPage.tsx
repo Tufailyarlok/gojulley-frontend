@@ -72,10 +72,9 @@ export default function ListingsPage() {
       ),
     [listings, filter, location],
   )
-  const visibleTrips = useMemo(
-    () => (location ? trips.filter((t) => t.route.toLowerCase().includes(location.toLowerCase())) : trips),
-    [trips, location],
-  )
+  // When a search/filter is active, focus the page on matching stays & rides —
+  // hide the curated-trips showcase (it's a browse/discovery block, not a result).
+  const filtering = location !== '' || filter !== 'ALL'
   const filters: Filter[] = ['ALL', 'HOTEL', 'HOMESTAY', 'CAR', 'BIKE']
 
   function onFrom(v: string) {
@@ -186,7 +185,7 @@ export default function ListingsPage() {
       <div className="page">
         {flash && <div className="alert alert-success" style={{ marginTop: 24 }}>{flash}</div>}
 
-        {visibleTrips.length > 0 && (
+        {!filtering && trips.length > 0 && (
           <section id="trips" style={{ paddingTop: 48 }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 22 }}>
               <div>
@@ -197,7 +196,7 @@ export default function ListingsPage() {
               <Link to="/trips" className="nav-link" style={{ color: 'var(--navy)', whiteSpace: 'nowrap' }}>See all trips →</Link>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-              {visibleTrips.slice(0, 3).map((t, i) => (
+              {trips.slice(0, 3).map((t, i) => (
                 <article key={t.id} className="listing-card">
                   <PhotoTile theme={TRIP_THEMES[i % TRIP_THEMES.length]} sun src={tripPhoto(t, i)} alt={t.title}>
                     <span className="ph-route">{t.durationDays} days · {t.route}</span>
