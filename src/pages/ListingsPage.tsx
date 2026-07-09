@@ -44,7 +44,7 @@ export default function ListingsPage() {
 
   const locations = useMemo(() => [...new Set(listings.map((l) => l.location))].sort(), [listings])
   const visible = useMemo(() => (filter === 'ALL' ? listings : listings.filter((l) => l.type === filter)), [listings, filter])
-  const filters: Filter[] = ['ALL', 'HOTEL', 'HOMESTAY', 'CAR', 'BIKE']
+  const filters: Filter[] = ['ALL', 'HOTEL', 'HOMESTAY', 'CAR', 'BIKE', 'EXPERIENCE']
 
   function onFrom(v: string) {
     setFrom(v)

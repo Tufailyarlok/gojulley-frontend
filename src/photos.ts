@@ -29,6 +29,13 @@ const CAR_MAP: [string, string][] = [
   ['traveller', 'tempo'],
   ['van', 'van'],
 ]
+const EXPERIENCE_MAP: [string, string][] = [
+  ['camel', 'camel-safari'],
+  ['raft', 'rafting'],
+  ['monastery', 'monastery'],
+  ['atv', 'atv'],
+  ['photograph', 'photography'],
+]
 const PLACES = ['leh', 'nubra', 'pangong', 'zanskar', 'turtuk']
 
 function byKeyword(map: [string, string][], text: string, folder: string): string {
@@ -51,6 +58,8 @@ export function listingPhoto(l: Listing): string {
     case 'HOTEL':
     case 'HOMESTAY':
       return byPlace(l.location, 'stays')
+    case 'EXPERIENCE':
+      return byKeyword(EXPERIENCE_MAP, l.title, 'experiences')
     default:
       return byPlace(l.location, 'places')
   }

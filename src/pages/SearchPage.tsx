@@ -48,11 +48,12 @@ export default function SearchPage() {
   const stays = useMemo(() => listings.filter((l) => (l.type === 'HOTEL' || l.type === 'HOMESTAY') && (!destination || l.location === destination)), [listings, destination])
   const bikes = useMemo(() => listings.filter((l) => l.type === 'BIKE' && (!destination || l.location === destination)), [listings, destination])
   const cars = useMemo(() => listings.filter((l) => l.type === 'CAR' && (!destination || l.location === destination)), [listings, destination])
+  const experiences = useMemo(() => listings.filter((l) => l.type === 'EXPERIENCE' && (!destination || l.location === destination)), [listings, destination])
   const packages = useMemo(
     () => (destination ? trips.filter((t) => t.route.toLowerCase().includes(destination.toLowerCase())) : trips),
     [trips, destination],
   )
-  const counts: Record<Cat, number> = { packages: packages.length, stays: stays.length, bikes: bikes.length, cars: cars.length, experiences: 0 }
+  const counts: Record<Cat, number> = { packages: packages.length, stays: stays.length, bikes: bikes.length, cars: cars.length, experiences: experiences.length }
 
   const listingGrid = (items: Listing[], emptyMsg: string) =>
     items.length ? (
@@ -144,11 +145,7 @@ export default function SearchPage() {
         {tab === 'stays' && listingGrid(stays, `No stays${destination ? ` in ${destination}` : ''} yet.`)}
         {tab === 'bikes' && listingGrid(bikes, 'No bikes available here yet.')}
         {tab === 'cars' && listingGrid(cars, 'No cars available here yet.')}
-        {tab === 'experiences' && (
-          <div className="card" style={{ textAlign: 'center', color: 'var(--faint)', padding: 40 }}>
-            Experiences — camel safari, river rafting, monastery tours, ATV rides, photography — coming soon.
-          </div>
-        )}
+        {tab === 'experiences' && listingGrid(experiences, `No experiences${destination ? ` in ${destination}` : ''} yet.`)}
       </div>
     </>
   )
