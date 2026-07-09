@@ -4,10 +4,7 @@ import { getListings, getReviewSummaries, getTrips } from '../api'
 import ListingCard from '../components/ListingCard'
 import TripCard from '../components/TripCard'
 import { addDays, todayISO } from '../dates'
-import { TYPE_META } from '../listingMeta'
-import type { Listing, ListingType, ReviewSummary, TripPackage } from '../types'
-
-type Filter = 'ALL' | ListingType
+import type { Listing, ReviewSummary, TripPackage } from '../types'
 
 export default function ListingsPage() {
   const navigate = useNavigate()
@@ -15,7 +12,6 @@ export default function ListingsPage() {
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<Filter>('ALL')
   const [trips, setTrips] = useState<TripPackage[]>([])
   const [summaries, setSummaries] = useState<Record<number, ReviewSummary>>({})
 
@@ -43,8 +39,17 @@ export default function ListingsPage() {
   }, [])
 
   const locations = useMemo(() => [...new Set(listings.map((l) => l.location))].sort(), [listings])
-  const visible = useMemo(() => (filter === 'ALL' ? listings : listings.filter((l) => l.type === filter)), [listings, filter])
-  const filters: Filter[] = ['ALL', 'HOTEL', 'HOMESTAY', 'CAR', 'BIKE', 'EXPERIENCE']
+  // À-la-carte inventory grouped into category sections (not one mixed grid).
+  const stays = useMemo(() => listings.filter((l) => l.type === 'HOTEL' || l.type === 'HOMESTAY'), [listings])
+  const bikes = useMemo(() => listings.filter((l) => l.type === 'BIKE'), [listings])
+  const cars = useMemo(() => listings.filter((l) => l.type === 'CAR'), [listings])
+  const experiences = useMemo(() => listings.filter((l) => l.type === 'EXPERIENCE'), [listings])
+  const sections = [
+    { key: 'stays', eyebrow: 'Stays', title: 'Stays & homestays', sub: 'Hotels, lakeside camps and family homestays across the valleys.', items: stays },
+    { key: 'bikes', eyebrow: 'Rentals', title: 'Bike rentals', sub: 'Self-drive Himalayans, Classics and more, ready for the high passes.', items: bikes },
+    { key: 'cars', eyebrow: 'Rentals', title: 'Car rentals & taxis', sub: 'SUVs and tempo travellers with drivers who know the roads.', items: cars },
+    { key: 'experiences', eyebrow: 'Things to do', title: 'Experiences', sub: 'Camel safaris, river rafting, monastery tours, ATV rides and more.', items: experiences },
+  ] as const
 
   function onFrom(v: string) {
     setFrom(v)
@@ -142,29 +147,38 @@ export default function ListingsPage() {
 
         <section style={{ paddingTop: 52 }}>
           <span className="eyebrow">À la carte</span>
-          <h2 className="section-title">Or book individual stays &amp; rides</h2>
-          <p className="section-sub" style={{ marginBottom: 20 }}>Pick exactly what you need across Leh, Nubra and Pangong.</p>
-
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 22 }}>
-            {filters.map((f) => (
-              <button key={f} onClick={() => setFilter(f)} className={`filter-pill${filter === f ? ' active' : ''}`}>
-                {f === 'ALL' ? 'All' : TYPE_META[f].label}
-              </button>
-            ))}
-          </div>
-
-          {loading && <p style={{ color: 'var(--faint)' }}>Loading listings…</p>}
-          {error && <div className="alert alert-error">Couldn’t load listings: {error}</div>}
-
-          {!loading && !error && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))', gap: 20 }}>
-              {visible.map((l) => (
-                <ListingCard key={l.id} listing={l} summary={summaries[l.id]} />
-              ))}
-              {visible.length === 0 && <p style={{ color: 'var(--faint)' }}>No listings for this filter yet.</p>}
-            </div>
-          )}
+          <h2 className="section-title">Or book individual services</h2>
+          <p className="section-sub">Browse by category across Leh, Nubra and Pangong — mix and match your own trip.</p>
         </section>
+
+        {loading && <p style={{ color: 'var(--faint)', paddingTop: 20 }}>Loading listings…</p>}
+        {error && <div className="alert alert-error" style={{ marginTop: 20 }}>Couldn’t load listings: {error}</div>}
+
+        {!loading &&
+          !error &&
+          sections.map((s) =>
+            s.items.length === 0 ? null : (
+              <section key={s.key} style={{ paddingTop: 40 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
+                  <div>
+                    <span className="eyebrow">{s.eyebrow}</span>
+                    <h3 className="section-title" style={{ fontSize: 22 }}>{s.title}</h3>
+                    <p className="section-sub">{s.sub}</p>
+                  </div>
+                  {s.items.length > 4 && (
+                    <Link to={`/search?tab=${s.key}`} className="nav-link" style={{ color: 'var(--navy)', whiteSpace: 'nowrap' }}>
+                      See all {s.items.length} →
+                    </Link>
+                  )}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))', gap: 20 }}>
+                  {s.items.slice(0, 4).map((l) => (
+                    <ListingCard key={l.id} listing={l} summary={summaries[l.id]} />
+                  ))}
+                </div>
+              </section>
+            ),
+          )}
       </div>
 
     </>
