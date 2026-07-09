@@ -1,0 +1,12 @@
+bikes/ — name your .jpg files exactly like this (lowercase, hyphens):
+
+  himalayan.jpg       Royal Enfield Himalayan 411 / 450
+  classic-350.jpg     Royal Enfield Classic 350
+  bullet-350.jpg      Royal Enfield Bullet 350
+  meteor-350.jpg      Royal Enfield Meteor 350
+  ktm-adventure.jpg   KTM Adventure 250 / 390
+  xpulse.jpg          Hero XPulse 200
+  default.jpg         fallback for any other bike  (keep this!)
+
+Matched by the bike model word in the listing title.
+Any model not listed -> default.jpg. Tell me and I'll add it.

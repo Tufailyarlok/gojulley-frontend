@@ -1,0 +1,13 @@
+cars/ — name your .jpg files exactly like this (lowercase, hyphens):
+
+  innova-crysta.jpg   Toyota Innova Crysta
+  innova.jpg          Toyota Innova
+  xylo.jpg            Mahindra Xylo
+  scorpio.jpg         Mahindra Scorpio
+  ertiga.jpg          Maruti Ertiga
+  tempo.jpg           Tempo Traveller  (also matches "traveller")
+  van.jpg             van / minibus
+  default.jpg         fallback for any other car  (keep this!)
+
+Matched by the car model word in the listing title.
+Any model not listed -> default.jpg. Tell me and I'll add it.
