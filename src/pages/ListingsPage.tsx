@@ -3,30 +3,13 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getListings, getReviewSummaries, getTrips } from '../api'
 import { useAuth } from '../auth'
 import BookingModal from '../components/BookingModal'
-import PhotoTile from '../components/PhotoTile'
-import Stars from '../components/Stars'
-import { listingPhoto, tripPhoto } from '../photos'
+import ListingCard from '../components/ListingCard'
+import TripCard from '../components/TripCard'
+import { addDays, todayISO } from '../dates'
+import { TYPE_META } from '../listingMeta'
 import type { Listing, ListingType, ReviewSummary, TripPackage } from '../types'
 
-// Local-timezone yyyy-mm-dd date helpers (no UTC off-by-one).
-function localISO(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-function addDays(iso: string, n: number) {
-  const [y, m, d] = iso.split('-').map(Number)
-  return localISO(new Date(y, m - 1, d + n))
-}
-
-const TYPE_META = {
-  HOTEL: { label: 'Hotels', badge: 'Hotel', tint: '#eff6ff', ink: '#1d4ed8', theme: 'blue' },
-  HOMESTAY: { label: 'Homestays', badge: 'Homestay', tint: '#ecfdf5', ink: '#047857', theme: 'green' },
-  CAR: { label: 'Cars / Taxi', badge: 'Car / Taxi', tint: '#fffbeb', ink: '#b45309', theme: 'amber' },
-  BIKE: { label: 'Bikes', badge: 'Bike', tint: '#fdf4ff', ink: '#a21caf', theme: 'purple' },
-} as const
-
-const TRIP_THEMES = ['blue', 'amber', 'teal'] as const
 type Filter = 'ALL' | ListingType
-const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
 
 export default function ListingsPage() {
   const { user } = useAuth()
@@ -39,13 +22,14 @@ export default function ListingsPage() {
   const [booking, setBooking] = useState<Listing | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
   const [trips, setTrips] = useState<TripPackage[]>([])
+  const [summaries, setSummaries] = useState<Record<number, ReviewSummary>>({})
+
+  // Hero search draft → navigates to the /search results page.
   const [draftLocation, setDraftLocation] = useState('')
-  const [location, setLocation] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [travellers, setTravellers] = useState(2)
-  const [reviewSummaries, setReviewSummaries] = useState<Record<number, ReviewSummary>>({})
-  const today = localISO(new Date())
+  const today = todayISO()
 
   function load() {
     getListings()
@@ -53,28 +37,18 @@ export default function ListingsPage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }
-
   useEffect(() => {
     load()
     getTrips()
       .then(setTrips)
       .catch(() => {})
     getReviewSummaries()
-      .then((list) => setReviewSummaries(Object.fromEntries(list.map((s) => [s.listingId, s]))))
+      .then((l) => setSummaries(Object.fromEntries(l.map((s) => [s.listingId, s]))))
       .catch(() => {})
   }, [])
 
   const locations = useMemo(() => [...new Set(listings.map((l) => l.location))].sort(), [listings])
-  const visible = useMemo(
-    () =>
-      listings.filter(
-        (l) => (filter === 'ALL' || l.type === filter) && (!location || l.location === location),
-      ),
-    [listings, filter, location],
-  )
-  // When a search/filter is active, focus the page on matching stays & rides —
-  // hide the curated-trips showcase (it's a browse/discovery block, not a result).
-  const filtering = location !== '' || filter !== 'ALL'
+  const visible = useMemo(() => (filter === 'ALL' ? listings : listings.filter((l) => l.type === filter)), [listings, filter])
   const filters: Filter[] = ['ALL', 'HOTEL', 'HOMESTAY', 'CAR', 'BIKE']
 
   function onFrom(v: string) {
@@ -84,6 +58,15 @@ export default function ListingsPage() {
   function onTo(v: string) {
     setTo(v)
     if (from && v <= from) setFrom('')
+  }
+
+  function runSearch() {
+    const p = new URLSearchParams()
+    if (draftLocation) p.set('destination', draftLocation)
+    if (from) p.set('from', from)
+    if (to) p.set('to', to)
+    p.set('travellers', String(travellers))
+    navigate(`/search?${p.toString()}`)
   }
 
   function onBook(l: Listing) {
@@ -137,24 +120,9 @@ export default function ListingsPage() {
           <div className="field-cell">
             <label>Dates</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <input
-                className="plan-input plan-date"
-                type="date"
-                min={today}
-                max={to ? addDays(to, -1) : undefined}
-                value={from}
-                onChange={(e) => onFrom(e.target.value)}
-                aria-label="Check-in"
-              />
+              <input className="plan-input plan-date" type="date" min={today} max={to ? addDays(to, -1) : undefined} value={from} onChange={(e) => onFrom(e.target.value)} aria-label="Check-in" />
               <span style={{ color: 'var(--faint)' }}>→</span>
-              <input
-                className="plan-input plan-date"
-                type="date"
-                min={from ? addDays(from, 1) : addDays(today, 1)}
-                value={to}
-                onChange={(e) => onTo(e.target.value)}
-                aria-label="Check-out"
-              />
+              <input className="plan-input plan-date" type="date" min={from ? addDays(from, 1) : addDays(today, 1)} value={to} onChange={(e) => onTo(e.target.value)} aria-label="Check-out" />
             </div>
           </div>
           <div className="field-cell">
@@ -165,17 +133,7 @@ export default function ListingsPage() {
               ))}
             </select>
           </div>
-          <button
-            className="plan-go"
-            type="button"
-            onClick={() => {
-              setLocation(draftLocation)
-              setTimeout(
-                () => (document.getElementById('trips') || document.getElementById('results'))?.scrollIntoView({ behavior: 'smooth' }),
-                0,
-              )
-            }}
-          >
+          <button className="plan-go" type="button" onClick={runSearch}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             Search
           </button>
@@ -185,8 +143,8 @@ export default function ListingsPage() {
       <div className="page">
         {flash && <div className="alert alert-success" style={{ marginTop: 24 }}>{flash}</div>}
 
-        {!filtering && trips.length > 0 && (
-          <section id="trips" style={{ paddingTop: 48 }}>
+        {trips.length > 0 && (
+          <section style={{ paddingTop: 48 }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 22 }}>
               <div>
                 <span className="eyebrow">Curated packages</span>
@@ -197,39 +155,16 @@ export default function ListingsPage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
               {trips.slice(0, 3).map((t, i) => (
-                <article key={t.id} className="listing-card">
-                  <PhotoTile theme={TRIP_THEMES[i % TRIP_THEMES.length]} sun src={tripPhoto(t, i)} alt={t.title}>
-                    <span className="ph-route">{t.durationDays} days · {t.route}</span>
-                  </PhotoTile>
-                  <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-                    <h3 style={{ fontSize: 17, fontWeight: 800 }}>{t.title}</h3>
-                    <p style={{ fontSize: 13.5, color: 'var(--muted)', margin: 0, flex: 1 }}>{t.summary}</p>
-                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
-                        {inr(t.pricePerPerson)}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--faint)' }}> /person</span>
-                      </div>
-                      <Link to={`/trips/${t.id}`} className="btn btn-primary">View trip</Link>
-                    </div>
-                  </div>
-                </article>
+                <TripCard key={t.id} trip={t} index={i} />
               ))}
             </div>
           </section>
         )}
 
-        <section id="results" style={{ paddingTop: 52 }}>
+        <section style={{ paddingTop: 52 }}>
           <span className="eyebrow">À la carte</span>
           <h2 className="section-title">Or book individual stays &amp; rides</h2>
-          {location ? (
-            <p className="section-sub" style={{ marginBottom: 20 }}>
-              Showing <strong style={{ color: 'var(--ink)' }}>{visible.length}</strong> in {location} ·{' '}
-              <button className="btn-link" type="button" onClick={() => { setLocation(''); setDraftLocation('') }}>
-                Clear filter
-              </button>
-            </p>
-          ) : (
-            <p className="section-sub" style={{ marginBottom: 20 }}>Pick exactly what you need across Leh, Nubra and Pangong.</p>
-          )}
+          <p className="section-sub" style={{ marginBottom: 20 }}>Pick exactly what you need across Leh, Nubra and Pangong.</p>
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 22 }}>
             {filters.map((f) => (
@@ -244,43 +179,9 @@ export default function ListingsPage() {
 
           {!loading && !error && (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))', gap: 20 }}>
-              {visible.map((l) => {
-                const meta = TYPE_META[l.type]
-                return (
-                  <article key={l.id} className="listing-card">
-                    <PhotoTile theme={meta.theme} src={listingPhoto(l)} alt={l.title}>
-                      <span className="ph-badge" style={{ color: meta.ink }}>{meta.badge}</span>
-                    </PhotoTile>
-                    <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
-                      <span className="type-badge" style={{ background: meta.tint, color: meta.ink }}>{l.location}</span>
-                      <h3 style={{ fontSize: 17, fontWeight: 800, lineHeight: 1.25 }}>{l.title}</h3>
-                      {reviewSummaries[l.id] ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-                          <Stars value={reviewSummaries[l.id].average} size={14} />
-                          <strong style={{ color: 'var(--ink)' }}>{reviewSummaries[l.id].average.toFixed(1)}</strong>
-                          <span style={{ color: 'var(--faint)' }}>({reviewSummaries[l.id].count})</span>
-                        </div>
-                      ) : (
-                        <div style={{ fontSize: 12.5, color: 'var(--faint)' }}>No reviews yet</div>
-                      )}
-                      <p style={{ fontSize: 13.5, color: 'var(--muted)', margin: 0, flex: 1 }}>{l.description}</p>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 4, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
-                        <div>
-                          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
-                            {inr(l.pricePerDay)}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--faint)' }}>/day</span>
-                          </div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: l.quantity > 0 ? 'var(--ok)' : 'var(--danger)' }}>
-                            {l.quantity > 0 ? `${l.quantity} available` : 'Sold out'}
-                          </div>
-                        </div>
-                        <button onClick={() => onBook(l)} disabled={l.quantity === 0} className="btn btn-primary">
-                          {l.quantity === 0 ? 'Sold out' : 'Book now'}
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                )
-              })}
+              {visible.map((l) => (
+                <ListingCard key={l.id} listing={l} summary={summaries[l.id]} onBook={onBook} />
+              ))}
               {visible.length === 0 && <p style={{ color: 'var(--faint)' }}>No listings for this filter yet.</p>}
             </div>
           )}

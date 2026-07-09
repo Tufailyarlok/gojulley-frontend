@@ -8,6 +8,7 @@ import AdminPage from './pages/AdminPage'
 import BookingsPage from './pages/BookingsPage'
 import TripsPage from './pages/TripsPage'
 import TripDetailPage from './pages/TripDetailPage'
+import SearchPage from './pages/SearchPage'
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
         <NavBar />
         <Routes>
           <Route path="/" element={<ListingsPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/trips" element={<TripsPage />} />
           <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
