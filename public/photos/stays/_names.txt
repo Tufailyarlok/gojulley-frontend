@@ -1,0 +1,11 @@
+stays/ — name your .jpg files by LOCATION (lowercase):
+
+  leh.jpg         stays in Leh
+  nubra.jpg       stays in Nubra
+  pangong.jpg     stays near Pangong
+  zanskar.jpg     stays in Zanskar
+  turtuk.jpg      stays in Turtuk
+  default.jpg     fallback for any other location  (keep this!)
+
+Used for both hotels and homestays. Matched by the stay's location.
+New location? Add <location>.jpg here AND tell me to register it.

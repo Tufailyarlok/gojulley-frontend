@@ -1,0 +1,11 @@
+places/ — name your .jpg files by PLACE (lowercase):
+
+  leh.jpg         Leh
+  nubra.jpg       Nubra valley
+  pangong.jpg     Pangong lake
+  zanskar.jpg     Zanskar
+  turtuk.jpg      Turtuk
+  default.jpg     fallback  (keep this!)
+
+Used for tour-package cards (by route) and the /search banner (by destination).
+New place? Add <place>.jpg here AND tell me to register it.
