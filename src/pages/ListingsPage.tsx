@@ -39,7 +39,8 @@ export default function ListingsPage() {
   const [booking, setBooking] = useState<Listing | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
   const [trips, setTrips] = useState<TripPackage[]>([])
-  const [searchLocation, setSearchLocation] = useState('')
+  const [draftLocation, setDraftLocation] = useState('')
+  const [location, setLocation] = useState('')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
   const [travellers, setTravellers] = useState(2)
@@ -67,13 +68,13 @@ export default function ListingsPage() {
   const visible = useMemo(
     () =>
       listings.filter(
-        (l) => (filter === 'ALL' || l.type === filter) && (!searchLocation || l.location === searchLocation),
+        (l) => (filter === 'ALL' || l.type === filter) && (!location || l.location === location),
       ),
-    [listings, filter, searchLocation],
+    [listings, filter, location],
   )
   const visibleTrips = useMemo(
-    () => (searchLocation ? trips.filter((t) => t.route.toLowerCase().includes(searchLocation.toLowerCase())) : trips),
-    [trips, searchLocation],
+    () => (location ? trips.filter((t) => t.route.toLowerCase().includes(location.toLowerCase())) : trips),
+    [trips, location],
   )
   const filters: Filter[] = ['ALL', 'HOTEL', 'HOMESTAY', 'CAR', 'BIKE']
 
@@ -127,7 +128,7 @@ export default function ListingsPage() {
         <div className="planbar-card">
           <div className="field-cell">
             <label>Destination</label>
-            <select className="plan-input" value={searchLocation} onChange={(e) => setSearchLocation(e.target.value)}>
+            <select className="plan-input" value={draftLocation} onChange={(e) => setDraftLocation(e.target.value)}>
               <option value="">Anywhere in Ladakh</option>
               {locations.map((loc) => (
                 <option key={loc} value={loc}>{loc}</option>
@@ -168,7 +169,13 @@ export default function ListingsPage() {
           <button
             className="plan-go"
             type="button"
-            onClick={() => (document.getElementById('trips') || document.getElementById('results'))?.scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => {
+              setLocation(draftLocation)
+              setTimeout(
+                () => (document.getElementById('trips') || document.getElementById('results'))?.scrollIntoView({ behavior: 'smooth' }),
+                0,
+              )
+            }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             Search
@@ -214,7 +221,16 @@ export default function ListingsPage() {
         <section id="results" style={{ paddingTop: 52 }}>
           <span className="eyebrow">À la carte</span>
           <h2 className="section-title">Or book individual stays &amp; rides</h2>
-          <p className="section-sub" style={{ marginBottom: 20 }}>Pick exactly what you need across Leh, Nubra and Pangong.</p>
+          {location ? (
+            <p className="section-sub" style={{ marginBottom: 20 }}>
+              Showing <strong style={{ color: 'var(--ink)' }}>{visible.length}</strong> in {location} ·{' '}
+              <button className="btn-link" type="button" onClick={() => { setLocation(''); setDraftLocation('') }}>
+                Clear filter
+              </button>
+            </p>
+          ) : (
+            <p className="section-sub" style={{ marginBottom: 20 }}>Pick exactly what you need across Leh, Nubra and Pangong.</p>
+          )}
 
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 22 }}>
             {filters.map((f) => (
