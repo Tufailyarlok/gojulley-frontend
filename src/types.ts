@@ -1,6 +1,6 @@
 // Shared types that mirror the backend's data shapes.
 
-export type ListingType = 'HOTEL' | 'HOMESTAY' | 'CAR' | 'BIKE'
+export type ListingType = 'HOTEL' | 'HOMESTAY' | 'CAR' | 'BIKE' | 'EXPERIENCE'
 
 export interface Listing {
   id: number
