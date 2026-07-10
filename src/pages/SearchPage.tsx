@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getListings, getReviewSummaries } from '../api'
 import ListingCard from '../components/ListingCard'
-import { addDays, todayISO } from '../dates'
 import { placePhoto } from '../photos'
 import type { Listing, ReviewSummary } from '../types'
 
@@ -22,11 +21,8 @@ export default function SearchPage() {
   const [summaries, setSummaries] = useState<Record<number, ReviewSummary>>({})
 
   const destination = params.get('destination') || ''
-  const from = params.get('from') || ''
-  const to = params.get('to') || ''
   const travellers = Number(params.get('travellers') || '2')
   const tab = (params.get('tab') as Cat) || 'stays'
-  const today = todayISO()
 
   function setParam(patch: Record<string, string>) {
     const next = new URLSearchParams(params)
@@ -69,7 +65,6 @@ export default function SearchPage() {
           <h1 style={{ color: '#fff', fontSize: 34, fontWeight: 900, margin: '6px 0 0' }}>{destination || 'All of Ladakh'}</h1>
           <p style={{ color: '#c7d0f0', margin: '2px 0 0', fontSize: 15 }}>
             {travellers} traveller{travellers > 1 ? 's' : ''}
-            {from ? ` · ${from}${to ? ` → ${to}` : ''}` : ''}
           </p>
         </div>
       </div>
@@ -85,28 +80,7 @@ export default function SearchPage() {
               ))}
             </select>
           </label>
-          <label className="label" style={{ margin: 0, flex: '1 1 140px' }}>
-            Check-in
-            <input
-              className="field"
-              type="date"
-              min={today}
-              max={to ? addDays(to, -1) : undefined}
-              value={from}
-              onChange={(e) => setParam({ from: e.target.value, ...(to && to <= e.target.value ? { to: '' } : {}) })}
-            />
-          </label>
-          <label className="label" style={{ margin: 0, flex: '1 1 140px' }}>
-            Check-out
-            <input
-              className="field"
-              type="date"
-              min={from ? addDays(from, 1) : addDays(today, 1)}
-              value={to}
-              onChange={(e) => setParam({ to: e.target.value })}
-            />
-          </label>
-          <label className="label" style={{ margin: 0, flex: '0 1 120px' }}>
+          <label className="label" style={{ margin: 0, flex: '0 1 140px' }}>
             Travellers
             <select className="field" value={travellers} onChange={(e) => setParam({ travellers: e.target.value })}>
               {[1, 2, 3, 4, 5, 6].map((n) => (
