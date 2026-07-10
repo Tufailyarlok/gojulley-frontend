@@ -4,7 +4,7 @@ import { createTripBooking, createTripPaymentOrder, getCoupons, getListings, get
 import { useAuth } from '../auth'
 import { payWithRazorpay } from '../razorpay'
 import { tripPhoto } from '../photos'
-import ExperienceStrip from '../components/ExperienceStrip'
+import ServiceStrip from '../components/ServiceStrip'
 import type { Listing, PublicCoupon, TripPackage } from '../types'
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
@@ -42,15 +42,8 @@ export default function TripDetailPage() {
     getListings().then(setAllListings).catch(() => {})
   }, [])
 
-  // Experiences whose location sits on this trip's route — so they feel like
-  // part of the same trip, bookable alongside the package.
-  const routeExperiences = useMemo(
-    () =>
-      trip
-        ? allListings.filter((l) => l.type === 'EXPERIENCE' && trip.route.toLowerCase().includes(l.location.toLowerCase()))
-        : [],
-    [trip, allListings],
-  )
+  // Add-on services bookable alongside the package (trip-wide helpers).
+  const services = useMemo(() => allListings.filter((l) => l.type === 'SERVICE'), [allListings])
 
   useEffect(() => {
     if (!user) return
@@ -266,10 +259,10 @@ export default function TripDetailPage() {
       </div>
 
       <div style={{ marginTop: 24 }}>
-        <ExperienceStrip
-          title="Add experiences to your trip"
-          subtitle="Camel safaris, rafting, monastery tours and more along your route — book any alongside this package."
-          experiences={routeExperiences}
+        <ServiceStrip
+          title="Add services to your trip"
+          subtitle="A local guide, photographer, on-call mechanic or coordinator — book alongside this package."
+          services={services}
         />
       </div>
     </div>

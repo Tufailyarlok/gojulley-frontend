@@ -7,7 +7,7 @@
 //   cars/    innova-crysta, innova, xylo, scorpio, ertiga, van, tempo, default
 //   stays/   leh, nubra, pangong, zanskar, turtuk, default        (by location)
 //   places/  leh, nubra, pangong, zanskar, turtuk, default        (trip routes / banner)
-//   experiences/  camel-safari, rafting, monastery, atv, photography, default
+//   services/     guide, photographer, mechanic, coordinator, default   (by title keyword)
 import type { Listing, TripPackage } from './types'
 
 // keyword found in the title → filename (first match wins; order matters)
@@ -29,12 +29,11 @@ const CAR_MAP: [string, string][] = [
   ['traveller', 'tempo'],
   ['van', 'van'],
 ]
-const EXPERIENCE_MAP: [string, string][] = [
-  ['camel', 'camel-safari'],
-  ['raft', 'rafting'],
-  ['monastery', 'monastery'],
-  ['atv', 'atv'],
-  ['photograph', 'photography'],
+const SERVICE_MAP: [string, string][] = [
+  ['guide', 'guide'],
+  ['photograph', 'photographer'],
+  ['mechanic', 'mechanic'],
+  ['coordinator', 'coordinator'],
 ]
 const PLACES = ['leh', 'nubra', 'pangong', 'zanskar', 'turtuk']
 
@@ -58,8 +57,8 @@ export function listingPhoto(l: Listing): string {
     case 'HOTEL':
     case 'HOMESTAY':
       return byPlace(l.location, 'stays')
-    case 'EXPERIENCE':
-      return byKeyword(EXPERIENCE_MAP, l.title, 'experiences')
+    case 'SERVICE':
+      return byKeyword(SERVICE_MAP, l.title, 'services')
     default:
       return byPlace(l.location, 'places')
   }

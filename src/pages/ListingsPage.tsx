@@ -31,7 +31,7 @@ export default function ListingsPage() {
           <span className="eyebrow">One platform · everything in one place</span>
           <h2 className="section-title">Two ways to plan your Ladakh trip</h2>
           <p className="section-sub" style={{ marginBottom: 22 }}>
-            Book a ready-made package, or build your own from the same stays, rides and experiences.
+            Book a ready-made package, or build your own from the same stays, rides and services.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
@@ -45,8 +45,8 @@ export default function ListingsPage() {
             <button type="button" className="path-card" onClick={() => navigate('/search?tab=stays')}>
               <span className="type-badge" style={{ background: '#f0fdfa', color: '#0f766e' }}>Your way</span>
               <h3>Build your own trip</h3>
-              <p>Pick your own stays, rides and experiences across Leh, Nubra and Pangong — and book them together.</p>
-              <span className="path-cta">Browse stays, rides &amp; experiences →</span>
+              <p>Pick your own stays, rides and services across Leh, Nubra and Pangong — and book them together.</p>
+              <span className="path-cta">Browse stays, rides &amp; services →</span>
             </button>
           </div>
         </section>
