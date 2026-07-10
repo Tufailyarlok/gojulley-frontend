@@ -86,7 +86,15 @@ a { color: inherit; text-decoration: none; }
 .nav-link { font-size: 14px; font-weight: 700; color: var(--muted); }
 .nav-link:hover { color: var(--ink); }
 .nav-user { font-size: 13px; color: var(--faint); font-weight: 700; }
-@media (max-width: 640px) { .nav-user { display: none; } .nav-actions { gap: 14px; } }
+@media (max-width: 640px) {
+  /* Keep the whole bar inside the viewport so "Log out" can't spill off the
+     edge (which dragged the whole page into horizontal scroll). Hide the
+     longest bits and let the row wrap instead of overflowing. */
+  .nav-user { display: none; }
+  .brand-sub { display: none; }
+  .nav-inner { padding: 8px 14px; height: auto; gap: 8px 12px; flex-wrap: wrap; }
+  .nav-actions { gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+}
 
 /* ============ Hero ============ */
 .hero {
