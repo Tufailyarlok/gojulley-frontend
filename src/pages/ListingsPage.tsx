@@ -39,7 +39,7 @@ export default function ListingsPage() {
   }, [])
 
   const locations = useMemo(() => [...new Set(listings.map((l) => l.location))].sort(), [listings])
-  // À-la-carte inventory grouped into category sections (not one mixed grid).
+  // Individual inventory grouped into category sections (not one mixed grid).
   const stays = useMemo(() => listings.filter((l) => l.type === 'HOTEL' || l.type === 'HOMESTAY'), [listings])
   const bikes = useMemo(() => listings.filter((l) => l.type === 'BIKE'), [listings])
   const cars = useMemo(() => listings.filter((l) => l.type === 'CAR'), [listings])
@@ -146,8 +146,8 @@ export default function ListingsPage() {
         )}
 
         <section style={{ paddingTop: 52 }}>
-          <span className="eyebrow">À la carte</span>
-          <h2 className="section-title">Or book individual services</h2>
+          <span className="eyebrow">Build your own trip</span>
+          <h2 className="section-title">Or book services individually</h2>
           <p className="section-sub">Browse by category across Leh, Nubra and Pangong — mix and match your own trip.</p>
         </section>
 
