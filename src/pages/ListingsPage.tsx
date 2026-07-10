@@ -1,19 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { getListings, getReviewSummaries, getTrips } from '../api'
-import ListingCard from '../components/ListingCard'
-import TripCard from '../components/TripCard'
+import { useNavigate } from 'react-router-dom'
+import { getListings } from '../api'
 import { addDays, todayISO } from '../dates'
-import type { Listing, ReviewSummary, TripPackage } from '../types'
+import type { Listing } from '../types'
 
 export default function ListingsPage() {
   const navigate = useNavigate()
 
+  // Listings are fetched only to populate the destination dropdown.
   const [listings, setListings] = useState<Listing[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [trips, setTrips] = useState<TripPackage[]>([])
-  const [summaries, setSummaries] = useState<Record<number, ReviewSummary>>({})
 
   // Hero search draft → navigates to the /search results page.
   const [draftLocation, setDraftLocation] = useState('')
@@ -22,34 +17,13 @@ export default function ListingsPage() {
   const [travellers, setTravellers] = useState(2)
   const today = todayISO()
 
-  function load() {
+  useEffect(() => {
     getListings()
       .then(setListings)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }
-  useEffect(() => {
-    load()
-    getTrips()
-      .then(setTrips)
-      .catch(() => {})
-    getReviewSummaries()
-      .then((l) => setSummaries(Object.fromEntries(l.map((s) => [s.listingId, s]))))
       .catch(() => {})
   }, [])
 
   const locations = useMemo(() => [...new Set(listings.map((l) => l.location))].sort(), [listings])
-  // Individual inventory grouped into category sections (not one mixed grid).
-  const stays = useMemo(() => listings.filter((l) => l.type === 'HOTEL' || l.type === 'HOMESTAY'), [listings])
-  const bikes = useMemo(() => listings.filter((l) => l.type === 'BIKE'), [listings])
-  const cars = useMemo(() => listings.filter((l) => l.type === 'CAR'), [listings])
-  const experiences = useMemo(() => listings.filter((l) => l.type === 'EXPERIENCE'), [listings])
-  const sections = [
-    { key: 'stays', eyebrow: 'Stays', title: 'Stays & homestays', sub: 'Hotels, lakeside camps and family homestays across the valleys.', items: stays },
-    { key: 'bikes', eyebrow: 'Rentals', title: 'Bike rentals', sub: 'Self-drive Himalayans, Classics and more, ready for the high passes.', items: bikes },
-    { key: 'cars', eyebrow: 'Rentals', title: 'Car rentals & taxis', sub: 'SUVs and tempo travellers with drivers who know the roads.', items: cars },
-    { key: 'experiences', eyebrow: 'Things to do', title: 'Experiences', sub: 'Camel safaris, rafting, monastery tours, ATV rides and more — add them to any package or your own plan.', items: experiences },
-  ] as const
 
   function onFrom(v: string) {
     setFrom(v)
@@ -67,10 +41,6 @@ export default function ListingsPage() {
     if (to) p.set('to', to)
     p.set('travellers', String(travellers))
     navigate(`/search?${p.toString()}`)
-  }
-
-  function scrollToId(anchor: string) {
-    document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
@@ -134,89 +104,27 @@ export default function ListingsPage() {
         <section style={{ paddingTop: 44 }}>
           <span className="eyebrow">One platform · everything in one place</span>
           <h2 className="section-title">Two ways to plan your Ladakh trip</h2>
-          <p className="section-sub" style={{ marginBottom: 18 }}>
+          <p className="section-sub" style={{ marginBottom: 22 }}>
             Book a ready-made package, or build your own from the same stays, rides and experiences.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
-            {trips.length > 0 && (
-              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <span className="type-badge" style={{ alignSelf: 'flex-start', background: '#eff6ff', color: '#1d4ed8' }}>Fastest</span>
-                <h3 style={{ fontSize: 19, fontWeight: 800, margin: 0 }}>Book a ready-made package</h3>
-                <p style={{ color: 'var(--muted)', fontSize: 14, margin: 0, flex: 1 }}>
-                  We handle it end to end — stays, rides, permits and on-call support, one price and one booking.
-                </p>
-                <button type="button" className="btn btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => scrollToId('packages')}>
-                  See packages ↓
-                </button>
-              </div>
-            )}
-            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <span className="type-badge" style={{ alignSelf: 'flex-start', background: '#f0fdfa', color: '#0f766e' }}>Your way</span>
-              <h3 style={{ fontSize: 19, fontWeight: 800, margin: 0 }}>Build your own trip</h3>
-              <p style={{ color: 'var(--muted)', fontSize: 14, margin: 0, flex: 1 }}>
-                Pick your own stays, rides and experiences across Leh, Nubra and Pangong — and book them together.
-              </p>
-              <button type="button" className="btn btn-outline" style={{ alignSelf: 'flex-start' }} onClick={() => scrollToId('build')}>
-                Start building ↓
-              </button>
-            </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
+            <button type="button" className="path-card" onClick={() => navigate('/trips')}>
+              <span className="type-badge" style={{ background: '#eff6ff', color: '#1d4ed8' }}>Fastest</span>
+              <h3>Book a ready-made package</h3>
+              <p>We handle it end to end — stays, rides, permits and on-call support, one price and one booking.</p>
+              <span className="path-cta">Browse packages →</span>
+            </button>
+
+            <button type="button" className="path-card" onClick={() => navigate('/search?tab=stays')}>
+              <span className="type-badge" style={{ background: '#f0fdfa', color: '#0f766e' }}>Your way</span>
+              <h3>Build your own trip</h3>
+              <p>Pick your own stays, rides and experiences across Leh, Nubra and Pangong — and book them together.</p>
+              <span className="path-cta">Browse stays, rides &amp; experiences →</span>
+            </button>
           </div>
         </section>
-
-        {trips.length > 0 && (
-          <section id="packages" style={{ paddingTop: 48, scrollMarginTop: 80 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 22 }}>
-              <div>
-                <span className="eyebrow">Ready-made packages</span>
-                <h2 className="section-title">Whole trips, planned end to end</h2>
-                <p className="section-sub">One price, one booking — stays, rides, permits and support, all sorted.</p>
-              </div>
-              <Link to="/trips" className="nav-link" style={{ color: 'var(--navy)', whiteSpace: 'nowrap' }}>See all trips →</Link>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 20 }}>
-              {trips.slice(0, 3).map((t, i) => (
-                <TripCard key={t.id} trip={t} index={i} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        <section id="build" style={{ paddingTop: 52, scrollMarginTop: 80 }}>
-          <span className="eyebrow">Build your own trip</span>
-          <h2 className="section-title">Book services individually</h2>
-          <p className="section-sub">Browse by category across Leh, Nubra and Pangong, then book what you pick — together.</p>
-        </section>
-
-        {loading && <p style={{ color: 'var(--faint)', paddingTop: 20 }}>Loading listings…</p>}
-        {error && <div className="alert alert-error" style={{ marginTop: 20 }}>Couldn’t load listings: {error}</div>}
-
-        {!loading &&
-          !error &&
-          sections.map((s) =>
-            s.items.length === 0 ? null : (
-              <section key={s.key} style={{ paddingTop: 40 }}>
-                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 18 }}>
-                  <div>
-                    <span className="eyebrow">{s.eyebrow}</span>
-                    <h3 className="section-title" style={{ fontSize: 22 }}>{s.title}</h3>
-                    <p className="section-sub">{s.sub}</p>
-                  </div>
-                  {s.items.length > 4 && (
-                    <Link to={`/search?tab=${s.key}`} className="nav-link" style={{ color: 'var(--navy)', whiteSpace: 'nowrap' }}>
-                      See all {s.items.length} →
-                    </Link>
-                  )}
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(268px, 1fr))', gap: 20 }}>
-                  {s.items.slice(0, 4).map((l) => (
-                    <ListingCard key={l.id} listing={l} summary={summaries[l.id]} />
-                  ))}
-                </div>
-              </section>
-            ),
-          )}
       </div>
-
     </>
   )
 }
