@@ -8,7 +8,7 @@ export const TYPE_META: Record<
 > = {
   HOTEL: { label: 'Hotels', badge: 'Hotel', tint: '#eff6ff', ink: '#1d4ed8', theme: 'blue' },
   HOMESTAY: { label: 'Homestays', badge: 'Homestay', tint: '#ecfdf5', ink: '#047857', theme: 'green' },
-  CAR: { label: 'Cars / Taxi', badge: 'Car / Taxi', tint: '#fffbeb', ink: '#b45309', theme: 'amber' },
+  CAR: { label: 'Taxi', badge: 'Taxi', tint: '#fffbeb', ink: '#b45309', theme: 'amber' },
   BIKE: { label: 'Bikes', badge: 'Bike', tint: '#fdf4ff', ink: '#a21caf', theme: 'purple' },
   EXPERIENCE: { label: 'Experiences', badge: 'Experience', tint: '#f0fdfa', ink: '#0f766e', theme: 'teal' },
 }
