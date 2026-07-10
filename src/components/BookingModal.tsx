@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { createBooking } from '../api'
 import { useAuth } from '../auth'
 import { addDays, todayISO } from '../dates'
+import DateField from './DateField'
 import type { Listing } from '../types'
 
 export default function BookingModal({
@@ -79,25 +80,23 @@ export default function BookingModal({
           <div className="form-row">
             <label className="label" style={{ flex: 1 }}>
               Check-in
-              <input
-                className="field"
-                type="date"
+              <DateField
+                value={startDate}
+                onChange={onStart}
                 min={today}
                 max={endDate ? addDays(endDate, -1) : undefined}
-                value={startDate}
-                onChange={(e) => onStart(e.target.value)}
-                required
+                placeholder="Check-in"
+                ariaLabel="Check-in date"
               />
             </label>
             <label className="label" style={{ flex: 1 }}>
               Check-out
-              <input
-                className="field"
-                type="date"
-                min={startDate ? addDays(startDate, 1) : addDays(today, 1)}
+              <DateField
                 value={endDate}
-                onChange={(e) => onEnd(e.target.value)}
-                required
+                onChange={onEnd}
+                min={startDate ? addDays(startDate, 1) : addDays(today, 1)}
+                placeholder="Check-out"
+                ariaLabel="Check-out date"
               />
             </label>
           </div>

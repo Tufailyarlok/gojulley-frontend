@@ -184,6 +184,23 @@ a { color: inherit; text-decoration: none; }
 .map-pin { cursor: pointer; transition: opacity 0.15s ease; }
 .map-pin:hover { opacity: 0.78; }
 
+/* styled date field (native picker underneath, transparent) */
+.datefield {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff;
+  padding: 10px 12px; min-height: 44px; color: var(--ink); cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.datefield:focus-within { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(40, 50, 140, 0.12); }
+.datefield-icon { color: var(--navy); flex: 0 0 auto; }
+.datefield-text { font-size: 14px; font-weight: 700; }
+.datefield-ph { font-size: 14px; color: var(--faint); }
+.datefield-native {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; border: 0; margin: 0; padding: 0; cursor: pointer;
+}
+.datefield-native::-webkit-calendar-picker-indicator { opacity: 0; }
+
 /* "added to cart" success button */
 .btn-ok { background: #16a34a; border-color: #16a34a; color: #fff; }
 .btn-ok:hover { background: #15803d; border-color: #15803d; }
