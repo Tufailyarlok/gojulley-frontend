@@ -222,9 +222,17 @@ export async function cartCheckout(
   )
 }
 
-export async function createTripPaymentOrder(token: string, tripBookingId: number, couponCode?: string): Promise<PaymentOrder> {
+export async function createTripPaymentOrder(
+  token: string,
+  tripBookingId: number,
+  couponCode?: string,
+  deposit = false,
+): Promise<PaymentOrder> {
   return handle<PaymentOrder>(
-    await authedFetch(token, `${BASE}/trip-payments/order`, { method: 'POST', body: JSON.stringify({ tripBookingId, couponCode }) }),
+    await authedFetch(token, `${BASE}/trip-payments/order`, {
+      method: 'POST',
+      body: JSON.stringify({ tripBookingId, couponCode, deposit }),
+    }),
   )
 }
 

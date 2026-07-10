@@ -185,6 +185,11 @@ export default function BookingsPage() {
                   <div style={{ fontSize: 14, color: 'var(--muted)', marginTop: 4 }}>
                     Starts {t.startDate} · {t.travelers} traveller(s) · {inr(t.totalPrice)}
                   </div>
+                  {t.balanceDue > 0 && (
+                    <div style={{ fontSize: 13, color: '#b45309', fontWeight: 700, marginTop: 3 }}>
+                      Advance paid · {inr(t.balanceDue)} due on arrival at Leh
+                    </div>
+                  )}
                   {discounts[`trip-${t.id}`] > 0 && (
                     <div style={{ fontSize: 13, color: 'var(--ok)', fontWeight: 700, marginTop: 3 }}>
                       {coupons[`trip-${t.id}`]} · −{inr(discounts[`trip-${t.id}`])} → pay {inr(t.totalPrice - discounts[`trip-${t.id}`])}
