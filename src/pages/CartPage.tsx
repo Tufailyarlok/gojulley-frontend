@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { cartCheckout, createTripPaymentOrder, verifyTripPayment } from '../api'
 import { useAuth } from '../auth'
 import { useCart } from '../cart'
+import DateField from '../components/DateField'
 import { todayISO } from '../dates'
 import { TYPE_META, inr } from '../listingMeta'
 import { payWithRazorpay } from '../razorpay'
@@ -118,7 +119,7 @@ export default function CartPage() {
           <div className="card" style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <label className="label" style={{ margin: 0, flex: '1 1 180px' }}>
               Trip start date
-              <input className="field" type="date" min={today} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <DateField value={startDate} onChange={setStartDate} min={today} placeholder="Pick a start date" ariaLabel="Trip start date" />
             </label>
             <label className="label" style={{ margin: 0, flex: '0 1 140px' }}>
               Number of days

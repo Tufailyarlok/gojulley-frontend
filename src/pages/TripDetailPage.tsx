@@ -5,6 +5,7 @@ import { useAuth } from '../auth'
 import { payWithRazorpay } from '../razorpay'
 import { tripPhoto } from '../photos'
 import ServiceStrip from '../components/ServiceStrip'
+import DateField from '../components/DateField'
 import type { Listing, PublicCoupon, TripPackage } from '../types'
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
@@ -186,14 +187,7 @@ export default function TripDetailPage() {
               <div className="form-row">
                 <label className="label" style={{ flex: 1 }}>
                   Start date
-                  <input
-                    className="field"
-                    type="date"
-                    min={todayISO()}
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    required
-                  />
+                  <DateField value={startDate} onChange={setStartDate} min={todayISO()} placeholder="Pick a start date" ariaLabel="Trip start date" />
                 </label>
                 <label className="label" style={{ flex: 1 }}>
                   Travellers
