@@ -17,6 +17,9 @@ export default function NavBar() {
 
         <span className="nav-spacer" />
         <div className="nav-actions">
+          <Link to="/guide" className="nav-link">
+            Explore
+          </Link>
           <Link to="/trips" className="nav-link">
             Trips
           </Link>

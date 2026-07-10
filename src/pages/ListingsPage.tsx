@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 export default function ListingsPage() {
   const navigate = useNavigate()
@@ -31,7 +31,8 @@ export default function ListingsPage() {
           <span className="eyebrow">One platform · everything in one place</span>
           <h2 className="section-title">Two ways to plan your Ladakh trip</h2>
           <p className="section-sub" style={{ marginBottom: 22 }}>
-            Book a ready-made package, or build your own from the same stays, rides and services.
+            Book a ready-made package, or build your own from the same stays, rides and services.{' '}
+            <Link to="/guide" style={{ color: 'var(--navy)', fontWeight: 700 }}>Not sure where to go? Explore Ladakh →</Link>
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
