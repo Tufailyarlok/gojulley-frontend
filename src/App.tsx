@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './auth'
 import NavBar from './components/NavBar'
+import ScrollToTop from './components/ScrollToTop'
 import ListingsPage from './pages/ListingsPage'
 import LoginPage from './pages/LoginPage'
 import VerifyOtpPage from './pages/VerifyOtpPage'
@@ -15,6 +16,7 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <NavBar />
         <Routes>
           <Route path="/" element={<ListingsPage />} />
