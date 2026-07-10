@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getListing } from '../api'
+import { getListing, getListings } from '../api'
 import { useAuth } from '../auth'
 import BookingModal from '../components/BookingModal'
+import ExperienceStrip from '../components/ExperienceStrip'
 import Reviews from '../components/Reviews'
 import { TYPE_META, inr } from '../listingMeta'
 import { listingPhoto } from '../photos'
@@ -16,6 +17,7 @@ export default function ListingDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showBook, setShowBook] = useState(false)
   const [flash, setFlash] = useState<string | null>(null)
+  const [allListings, setAllListings] = useState<Listing[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -23,6 +25,19 @@ export default function ListingDetailPage() {
       .then(setListing)
       .catch((e) => setError((e as Error).message))
   }, [id])
+
+  useEffect(() => {
+    getListings().then(setAllListings).catch(() => {})
+  }, [])
+
+  // Experiences in the same place — so a stay/ride links out to things to do.
+  const thingsToDo = useMemo(
+    () =>
+      listing
+        ? allListings.filter((l) => l.type === 'EXPERIENCE' && l.location === listing.location && l.id !== listing.id)
+        : [],
+    [listing, allListings],
+  )
 
   if (error && !listing) {
     return (
@@ -84,6 +99,14 @@ export default function ListingDetailPage() {
           {flash} <Link to="/bookings">My bookings →</Link>
         </div>
       )}
+
+      <div style={{ marginTop: 28 }}>
+        <ExperienceStrip
+          title={`Things to do in ${listing.location}`}
+          subtitle="Round out your trip with experiences nearby — book them the same way."
+          experiences={thingsToDo}
+        />
+      </div>
 
       <div style={{ marginTop: 28 }}>
         <Reviews listingId={listing.id} />

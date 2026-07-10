@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { createTripBooking, createTripPaymentOrder, getCoupons, getTrip, previewCoupon, verifyTripPayment } from '../api'
+import { createTripBooking, createTripPaymentOrder, getCoupons, getListings, getTrip, previewCoupon, verifyTripPayment } from '../api'
 import { useAuth } from '../auth'
 import { payWithRazorpay } from '../razorpay'
 import { tripPhoto } from '../photos'
-import type { PublicCoupon, TripPackage } from '../types'
+import ExperienceStrip from '../components/ExperienceStrip'
+import type { Listing, PublicCoupon, TripPackage } from '../types'
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
 const todayISO = () => {
@@ -28,6 +29,7 @@ export default function TripDetailPage() {
   const [couponMsg, setCouponMsg] = useState<string | null>(null)
   const [applying, setApplying] = useState(false)
   const [offers, setOffers] = useState<PublicCoupon[]>([])
+  const [allListings, setAllListings] = useState<Listing[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -35,6 +37,20 @@ export default function TripDetailPage() {
       .then(setTrip)
       .catch((e) => setError((e as Error).message))
   }, [id])
+
+  useEffect(() => {
+    getListings().then(setAllListings).catch(() => {})
+  }, [])
+
+  // Experiences whose location sits on this trip's route — so they feel like
+  // part of the same trip, bookable alongside the package.
+  const routeExperiences = useMemo(
+    () =>
+      trip
+        ? allListings.filter((l) => l.type === 'EXPERIENCE' && trip.route.toLowerCase().includes(l.location.toLowerCase()))
+        : [],
+    [trip, allListings],
+  )
 
   useEffect(() => {
     if (!user) return
@@ -247,6 +263,14 @@ export default function TripDetailPage() {
             </>
           )}
         </div>
+      </div>
+
+      <div style={{ marginTop: 24 }}>
+        <ExperienceStrip
+          title="Add experiences to your trip"
+          subtitle="Camel safaris, rafting, monastery tours and more along your route — book any alongside this package."
+          experiences={routeExperiences}
+        />
       </div>
     </div>
   )

@@ -48,7 +48,7 @@ export default function ListingsPage() {
     { key: 'stays', eyebrow: 'Stays', title: 'Stays & homestays', sub: 'Hotels, lakeside camps and family homestays across the valleys.', items: stays },
     { key: 'bikes', eyebrow: 'Rentals', title: 'Bike rentals', sub: 'Self-drive Himalayans, Classics and more, ready for the high passes.', items: bikes },
     { key: 'cars', eyebrow: 'Rentals', title: 'Car rentals & taxis', sub: 'SUVs and tempo travellers with drivers who know the roads.', items: cars },
-    { key: 'experiences', eyebrow: 'Things to do', title: 'Experiences', sub: 'Camel safaris, river rafting, monastery tours, ATV rides and more.', items: experiences },
+    { key: 'experiences', eyebrow: 'Things to do', title: 'Experiences', sub: 'Camel safaris, rafting, monastery tours, ATV rides and more — add them to any package or your own plan.', items: experiences },
   ] as const
 
   function onFrom(v: string) {
@@ -67,6 +67,10 @@ export default function ListingsPage() {
     if (to) p.set('to', to)
     p.set('travellers', String(travellers))
     navigate(`/search?${p.toString()}`)
+  }
+
+  function scrollToId(anchor: string) {
+    document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   return (
@@ -127,11 +131,43 @@ export default function ListingsPage() {
       </div>
 
       <div className="page">
+        <section style={{ paddingTop: 44 }}>
+          <span className="eyebrow">One platform · everything in one place</span>
+          <h2 className="section-title">Two ways to plan your Ladakh trip</h2>
+          <p className="section-sub" style={{ marginBottom: 18 }}>
+            Book a ready-made package, or build your own from the same stays, rides and experiences.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 18 }}>
+            {trips.length > 0 && (
+              <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <span className="type-badge" style={{ alignSelf: 'flex-start', background: '#eff6ff', color: '#1d4ed8' }}>Fastest</span>
+                <h3 style={{ fontSize: 19, fontWeight: 800, margin: 0 }}>Book a ready-made package</h3>
+                <p style={{ color: 'var(--muted)', fontSize: 14, margin: 0, flex: 1 }}>
+                  We handle it end to end — stays, rides, permits and on-call support, one price and one booking.
+                </p>
+                <button type="button" className="btn btn-primary" style={{ alignSelf: 'flex-start' }} onClick={() => scrollToId('packages')}>
+                  See packages ↓
+                </button>
+              </div>
+            )}
+            <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <span className="type-badge" style={{ alignSelf: 'flex-start', background: '#f0fdfa', color: '#0f766e' }}>Your way</span>
+              <h3 style={{ fontSize: 19, fontWeight: 800, margin: 0 }}>Build your own trip</h3>
+              <p style={{ color: 'var(--muted)', fontSize: 14, margin: 0, flex: 1 }}>
+                Pick your own stays, rides and experiences across Leh, Nubra and Pangong — and book them together.
+              </p>
+              <button type="button" className="btn btn-outline" style={{ alignSelf: 'flex-start' }} onClick={() => scrollToId('build')}>
+                Start building ↓
+              </button>
+            </div>
+          </div>
+        </section>
+
         {trips.length > 0 && (
-          <section style={{ paddingTop: 48 }}>
+          <section id="packages" style={{ paddingTop: 48, scrollMarginTop: 80 }}>
             <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 22 }}>
               <div>
-                <span className="eyebrow">Curated packages</span>
+                <span className="eyebrow">Ready-made packages</span>
                 <h2 className="section-title">Whole trips, planned end to end</h2>
                 <p className="section-sub">One price, one booking — stays, rides, permits and support, all sorted.</p>
               </div>
@@ -145,10 +181,10 @@ export default function ListingsPage() {
           </section>
         )}
 
-        <section style={{ paddingTop: 52 }}>
+        <section id="build" style={{ paddingTop: 52, scrollMarginTop: 80 }}>
           <span className="eyebrow">Build your own trip</span>
-          <h2 className="section-title">Or book services individually</h2>
-          <p className="section-sub">Browse by category across Leh, Nubra and Pangong — mix and match your own trip.</p>
+          <h2 className="section-title">Book services individually</h2>
+          <p className="section-sub">Browse by category across Leh, Nubra and Pangong, then book what you pick — together.</p>
         </section>
 
         {loading && <p style={{ color: 'var(--faint)', paddingTop: 20 }}>Loading listings…</p>}
