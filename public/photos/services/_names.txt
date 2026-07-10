@@ -1,0 +1,11 @@
+services/ — name your .jpg files exactly like this (lowercase, hyphens):
+
+  guide.jpg           Local Guide
+  photographer.jpg    Trip Photographer
+  mechanic.jpg        On-call Bike Mechanic
+  coordinator.jpg     Trip Coordinator
+  default.jpg         fallback for any other service  (keep this!)
+
+Matched by a keyword in the service title (guide / photographer /
+mechanic / coordinator). Any service not listed -> default.jpg.
+Tell me the service and I'll add its keyword.

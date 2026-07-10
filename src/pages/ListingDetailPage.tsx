@@ -3,9 +3,9 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getListing, getListings } from '../api'
 import { useAuth } from '../auth'
 import BookingModal from '../components/BookingModal'
-import ExperienceStrip from '../components/ExperienceStrip'
+import ServiceStrip from '../components/ServiceStrip'
 import Reviews from '../components/Reviews'
-import { TYPE_META, inr } from '../listingMeta'
+import { TYPE_DETAILS, TYPE_META, inr } from '../listingMeta'
 import { listingPhoto } from '../photos'
 import type { Listing } from '../types'
 
@@ -30,12 +30,9 @@ export default function ListingDetailPage() {
     getListings().then(setAllListings).catch(() => {})
   }, [])
 
-  // Experiences in the same place — so a stay/ride links out to things to do.
-  const thingsToDo = useMemo(
-    () =>
-      listing
-        ? allListings.filter((l) => l.type === 'EXPERIENCE' && l.location === listing.location && l.id !== listing.id)
-        : [],
+  // Add-on services (trip-wide helpers) a traveler can book alongside this item.
+  const services = useMemo(
+    () => (listing ? allListings.filter((l) => l.type === 'SERVICE' && l.id !== listing.id) : []),
     [listing, allListings],
   )
 
@@ -100,11 +97,20 @@ export default function ListingDetailPage() {
         </div>
       )}
 
+      <div className="card" style={{ marginTop: 18 }}>
+        <h3 style={{ marginTop: 0, marginBottom: 10, fontSize: 17 }}>Good to know</h3>
+        <ul style={{ margin: 0, paddingLeft: 18, display: 'grid', gap: 6, color: 'var(--muted)', fontSize: 14 }}>
+          {TYPE_DETAILS[listing.type].map((d, i) => (
+            <li key={i}>{d}</li>
+          ))}
+        </ul>
+      </div>
+
       <div style={{ marginTop: 28 }}>
-        <ExperienceStrip
-          title={`Things to do in ${listing.location}`}
-          subtitle="Round out your trip with experiences nearby — book them the same way."
-          experiences={thingsToDo}
+        <ServiceStrip
+          title="Add services to your trip"
+          subtitle="Trip-wide helpers you can book the same way — a local guide, photographer, on-call mechanic or coordinator."
+          services={services}
         />
       </div>
 

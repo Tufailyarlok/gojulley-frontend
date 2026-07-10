@@ -10,7 +10,7 @@ const CATEGORIES = [
   { key: 'stays', label: 'Stays' },
   { key: 'bikes', label: 'Bike rentals' },
   { key: 'cars', label: 'Taxi' },
-  { key: 'experiences', label: 'Experiences' },
+  { key: 'services', label: 'Services' },
 ] as const
 type Cat = (typeof CATEGORIES)[number]['key']
 const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 } as const
@@ -23,6 +23,13 @@ export default function SearchPage() {
   const destination = params.get('destination') || ''
   const travellers = Number(params.get('travellers') || '2')
   const tab = (params.get('tab') as Cat) || 'stays'
+
+  // The filter is a draft that only applies when the user clicks Search.
+  const [draftDest, setDraftDest] = useState(destination)
+  const [draftTravellers, setDraftTravellers] = useState(travellers)
+  function applySearch() {
+    setParam({ destination: draftDest, travellers: String(draftTravellers) })
+  }
 
   function setParam(patch: Record<string, string>) {
     const next = new URLSearchParams(params)
@@ -41,8 +48,9 @@ export default function SearchPage() {
   const stays = useMemo(() => listings.filter((l) => (l.type === 'HOTEL' || l.type === 'HOMESTAY') && (!destination || l.location === destination)), [listings, destination])
   const bikes = useMemo(() => listings.filter((l) => l.type === 'BIKE' && (!destination || l.location === destination)), [listings, destination])
   const cars = useMemo(() => listings.filter((l) => l.type === 'CAR' && (!destination || l.location === destination)), [listings, destination])
-  const experiences = useMemo(() => listings.filter((l) => l.type === 'EXPERIENCE' && (!destination || l.location === destination)), [listings, destination])
-  const counts: Record<Cat, number> = { stays: stays.length, bikes: bikes.length, cars: cars.length, experiences: experiences.length }
+  // Services are trip-wide helpers (Leh-based), so they aren't filtered by destination.
+  const services = useMemo(() => listings.filter((l) => l.type === 'SERVICE'), [listings])
+  const counts: Record<Cat, number> = { stays: stays.length, bikes: bikes.length, cars: cars.length, services: services.length }
 
   const listingGrid = (items: Listing[], emptyMsg: string) =>
     items.length ? (
@@ -73,7 +81,7 @@ export default function SearchPage() {
         <div className="card" style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 20 }}>
           <label className="label" style={{ margin: 0, flex: '1 1 180px' }}>
             Destination
-            <select className="field" value={destination} onChange={(e) => setParam({ destination: e.target.value })}>
+            <select className="field" value={draftDest} onChange={(e) => setDraftDest(e.target.value)}>
               <option value="">Anywhere in Ladakh</option>
               {locations.map((loc) => (
                 <option key={loc} value={loc}>{loc}</option>
@@ -82,12 +90,13 @@ export default function SearchPage() {
           </label>
           <label className="label" style={{ margin: 0, flex: '0 1 140px' }}>
             Travellers
-            <select className="field" value={travellers} onChange={(e) => setParam({ travellers: e.target.value })}>
+            <select className="field" value={draftTravellers} onChange={(e) => setDraftTravellers(Number(e.target.value))}>
               {[1, 2, 3, 4, 5, 6].map((n) => (
                 <option key={n} value={n}>{n}</option>
               ))}
             </select>
           </label>
+          <button className="btn btn-primary" style={{ flex: '0 0 auto' }} onClick={applySearch}>Search</button>
         </div>
 
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 22 }}>
@@ -107,7 +116,7 @@ export default function SearchPage() {
         {tab === 'stays' && listingGrid(stays, `No stays${destination ? ` in ${destination}` : ''} yet.`)}
         {tab === 'bikes' && listingGrid(bikes, 'No bikes available here yet.')}
         {tab === 'cars' && listingGrid(cars, 'No cars available here yet.')}
-        {tab === 'experiences' && listingGrid(experiences, `No experiences${destination ? ` in ${destination}` : ''} yet.`)}
+        {tab === 'services' && listingGrid(services, 'No services available yet.')}
       </div>
     </>
   )
