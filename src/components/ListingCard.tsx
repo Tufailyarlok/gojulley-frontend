@@ -1,16 +1,23 @@
 import { Link } from 'react-router-dom'
 import PhotoTile from './PhotoTile'
 import Stars from './Stars'
+import { useCart } from '../cart'
 import { listingPhoto } from '../photos'
 import { TYPE_META, inr } from '../listingMeta'
 import type { Listing, ReviewSummary } from '../types'
 
 export default function ListingCard({ listing: l, summary }: { listing: Listing; summary?: ReviewSummary }) {
   const meta = TYPE_META[l.type]
+  const inCart = useCart().has(l.id)
   return (
-    <Link to={`/listings/${l.id}`} className="listing-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+    <Link
+      to={`/listings/${l.id}`}
+      className="listing-card"
+      style={{ textDecoration: 'none', color: 'inherit', ...(inCart ? { borderColor: '#16a34a', boxShadow: '0 0 0 1.5px #16a34a' } : {}) }}
+    >
       <PhotoTile theme={meta.theme} src={listingPhoto(l)} alt={l.title}>
         <span className="ph-badge" style={{ color: meta.ink }}>{meta.badge}</span>
+        {inCart && <span className="ph-incart">✓ In cart</span>}
       </PhotoTile>
       <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         <span className="type-badge" style={{ background: meta.tint, color: meta.ink }}>{l.location}</span>
