@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getListing, getListings } from '../api'
 import { useAuth } from '../auth'
+import { useCart } from '../cart'
 import BookingModal from '../components/BookingModal'
 import ServiceStrip from '../components/ServiceStrip'
 import Reviews from '../components/Reviews'
@@ -12,11 +13,12 @@ import type { Listing } from '../types'
 export default function ListingDetailPage() {
   const { id } = useParams()
   const { user } = useAuth()
+  const { add, has } = useCart()
   const navigate = useNavigate()
   const [listing, setListing] = useState<Listing | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [showBook, setShowBook] = useState(false)
-  const [flash, setFlash] = useState<string | null>(null)
+  const [flash, setFlash] = useState<{ text: string; to: string; label: string } | null>(null)
   const [allListings, setAllListings] = useState<Listing[]>([])
 
   useEffect(() => {
@@ -60,7 +62,12 @@ export default function ListingDetailPage() {
   }
   function onBooked() {
     setShowBook(false)
-    setFlash('Reserved! Complete payment under “My bookings” to confirm.')
+    setFlash({ text: 'Reserved! Complete payment to confirm.', to: '/bookings', label: 'My bookings →' })
+  }
+  function addToCart() {
+    if (!listing) return
+    add(listing)
+    setFlash({ text: 'Added to your cart.', to: '/cart', label: 'View cart →' })
   }
 
   return (
@@ -87,13 +94,18 @@ export default function ListingDetailPage() {
             {soldOut ? 'Sold out' : `${listing.quantity} available`}
           </div>
         </div>
-        <button className="btn btn-primary" disabled={soldOut} onClick={onBook} style={{ padding: '11px 24px', fontSize: 15 }}>
-          {soldOut ? 'Sold out' : 'Book now'}
-        </button>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button className="btn btn-primary" disabled={soldOut} onClick={addToCart} style={{ padding: '11px 22px', fontSize: 15 }}>
+            {soldOut ? 'Sold out' : has(listing.id) ? 'Added ✓ · add another' : 'Add to cart'}
+          </button>
+          <button className="btn btn-outline" disabled={soldOut} onClick={onBook} style={{ padding: '11px 22px', fontSize: 15 }}>
+            Book now
+          </button>
+        </div>
       </div>
       {flash && (
         <div className="alert alert-success" style={{ marginTop: 14 }}>
-          {flash} <Link to="/bookings">My bookings →</Link>
+          {flash.text} <Link to={flash.to}>{flash.label}</Link>
         </div>
       )}
 
