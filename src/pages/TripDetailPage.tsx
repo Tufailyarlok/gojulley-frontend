@@ -30,6 +30,7 @@ export default function TripDetailPage() {
   const [couponMsg, setCouponMsg] = useState<string | null>(null)
   const [applying, setApplying] = useState(false)
   const [offers, setOffers] = useState<PublicCoupon[]>([])
+  const [payMode, setPayMode] = useState<'full' | 'advance'>('full')
   const [allListings, setAllListings] = useState<Listing[]>([])
 
   useEffect(() => {
@@ -54,6 +55,10 @@ export default function TripDetailPage() {
   }, [user])
 
   const total = useMemo(() => (trip ? trip.pricePerPerson * travelers : 0), [trip, travelers])
+  const payable = total - discount
+  const advance = Math.round(payable * 0.1)
+  const balance = payable - advance
+  const payNow = payMode === 'advance' ? advance : payable
 
   function resetCoupon() {
     setDiscount(0)
@@ -90,7 +95,7 @@ export default function TripDetailPage() {
     setBusy(true)
     try {
       const booking = await createTripBooking(user.token, { packageId: trip.id, startDate, travelers })
-      const order = await createTripPaymentOrder(user.token, booking.id, coupon.trim() || undefined)
+      const order = await createTripPaymentOrder(user.token, booking.id, coupon.trim() || undefined, payMode === 'advance')
       await payWithRazorpay({
         order,
         user: { email: user.email, name: user.name },
@@ -241,11 +246,30 @@ export default function TripDetailPage() {
                     {' '}· <span style={{ color: 'var(--ok)' }}>− {inr(discount)}</span>
                   </>
                 )}{' '}
-                · <strong style={{ color: 'var(--ink)' }}>Pay {inr(total - discount)}</strong>
+                · <strong style={{ color: 'var(--ink)' }}>{inr(payable)}</strong>
               </div>
+
+              <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+                {(['full', 'advance'] as const).map((m) => {
+                  const sel = payMode === m
+                  return (
+                    <label key={m} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '11px 13px', border: `1.5px solid ${sel ? 'var(--navy)' : 'var(--line)'}`, borderRadius: 12, cursor: 'pointer', background: sel ? '#f5f7ff' : '#fff' }}>
+                      <input type="radio" name="paymode" checked={sel} onChange={() => setPayMode(m)} style={{ marginTop: 3 }} />
+                      <span style={{ fontSize: 13.5, color: 'var(--ink)' }}>
+                        {m === 'full' ? (
+                          <><strong>Pay in full now</strong> — {inr(payable)}</>
+                        ) : (
+                          <><strong>Reserve with 10% advance</strong> — pay {inr(advance)} now, <b>{inr(balance)} at Leh</b></>
+                        )}
+                      </span>
+                    </label>
+                  )
+                })}
+              </div>
+
               {error && <p className="alert alert-error" style={{ marginTop: 12 }}>{error}</p>}
               <button className="btn btn-primary btn-block" style={{ marginTop: 14 }} disabled={busy} onClick={bookAndPay}>
-                {busy ? 'Processing…' : user ? `Book & pay ${inr(total - discount)}` : 'Log in to book'}
+                {busy ? 'Processing…' : user ? `Book & pay ${inr(payNow)}` : 'Log in to book'}
               </button>
             </>
           )}

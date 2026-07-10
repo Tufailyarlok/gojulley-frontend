@@ -68,6 +68,7 @@ export interface TripBooking {
   startDate: string
   travelers: number
   totalPrice: number
+  balanceDue: number
   status: BookingStatus
 }
 

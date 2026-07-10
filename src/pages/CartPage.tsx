@@ -19,9 +19,13 @@ export default function CartPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  const [payMode, setPayMode] = useState<'full' | 'advance'>('full')
 
   const perDay = items.reduce((sum, i) => sum + i.pricePerDay * i.quantity, 0)
   const total = perDay * days
+  const advance = Math.round(total * 0.1)
+  const balance = total - advance
+  const payNow = payMode === 'advance' ? advance : total
 
   async function checkout() {
     if (!user) {
@@ -45,7 +49,7 @@ export default function CartPage() {
         days,
         items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
       })
-      const payOrder = await createTripPaymentOrder(user.token, order.id)
+      const payOrder = await createTripPaymentOrder(user.token, order.id, undefined, payMode === 'advance')
       await payWithRazorpay({
         order: payOrder,
         user: { email: user.email, name: user.name },
@@ -138,9 +142,26 @@ export default function CartPage() {
                 <span>{inr(total)}</span>
               </div>
             </div>
+            <div style={{ display: 'grid', gap: 8, marginBottom: 12 }}>
+              {(['full', 'advance'] as const).map((m) => {
+                const sel = payMode === m
+                return (
+                  <label key={m} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '11px 13px', border: `1.5px solid ${sel ? 'var(--navy)' : 'var(--line)'}`, borderRadius: 12, cursor: 'pointer', background: sel ? '#f5f7ff' : '#fff' }}>
+                    <input type="radio" name="paymode" checked={sel} onChange={() => setPayMode(m)} style={{ marginTop: 3 }} />
+                    <span style={{ fontSize: 13.5, color: 'var(--ink)' }}>
+                      {m === 'full' ? (
+                        <><strong>Pay in full now</strong> — {inr(total)}</>
+                      ) : (
+                        <><strong>Reserve with 10% advance</strong> — pay {inr(advance)} now, <b>{inr(balance)} at Leh</b></>
+                      )}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
             {error && <p className="alert alert-error" style={{ marginBottom: 12 }}>{error}</p>}
             <button className="btn btn-primary btn-block" disabled={busy} onClick={checkout}>
-              {busy ? 'Processing…' : user ? `Book & pay ${inr(total)}` : 'Log in to book'}
+              {busy ? 'Processing…' : user ? `Book & pay ${inr(payNow)}` : 'Log in to book'}
             </button>
           </div>
         </div>
