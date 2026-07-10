@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './auth'
+import { CartProvider } from './cart'
 import NavBar from './components/NavBar'
 import ScrollToTop from './components/ScrollToTop'
+import CartPage from './pages/CartPage'
 import ListingsPage from './pages/ListingsPage'
 import LoginPage from './pages/LoginPage'
 import VerifyOtpPage from './pages/VerifyOtpPage'
@@ -15,12 +17,14 @@ import ListingDetailPage from './pages/ListingDetailPage'
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <CartProvider>
+        <BrowserRouter>
         <ScrollToTop />
         <NavBar />
         <Routes>
           <Route path="/" element={<ListingsPage />} />
           <Route path="/search" element={<SearchPage />} />
+          <Route path="/cart" element={<CartPage />} />
           <Route path="/listings/:id" element={<ListingDetailPage />} />
           <Route path="/trips" element={<TripsPage />} />
           <Route path="/trips/:id" element={<TripDetailPage />} />
@@ -29,7 +33,8 @@ export default function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/bookings" element={<BookingsPage />} />
         </Routes>
-      </BrowserRouter>
+        </BrowserRouter>
+      </CartProvider>
     </AuthProvider>
   )
 }

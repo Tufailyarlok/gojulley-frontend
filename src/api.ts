@@ -211,6 +211,17 @@ export async function cancelTripBooking(token: string, id: number): Promise<Trip
   )
 }
 
+// Cart checkout — books all items as one "custom" order; pay for it via the
+// trip-payment endpoints above (it returns a TripBooking with the order id).
+export async function cartCheckout(
+  token: string,
+  data: { startDate: string; days: number; items: { listingId: number; quantity: number }[] },
+): Promise<TripBooking> {
+  return handle<TripBooking>(
+    await authedFetch(token, `${BASE}/cart/checkout`, { method: 'POST', body: JSON.stringify(data) }),
+  )
+}
+
 export async function createTripPaymentOrder(token: string, tripBookingId: number, couponCode?: string): Promise<PaymentOrder> {
   return handle<PaymentOrder>(
     await authedFetch(token, `${BASE}/trip-payments/order`, { method: 'POST', body: JSON.stringify({ tripBookingId, couponCode }) }),

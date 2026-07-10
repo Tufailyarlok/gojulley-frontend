@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth'
+import { useCart } from '../cart'
 
 export default function NavBar() {
   const { user, logout } = useAuth()
+  const { count } = useCart()
 
   return (
     <nav className="nav">
@@ -17,6 +19,9 @@ export default function NavBar() {
         <div className="nav-actions">
           <Link to="/trips" className="nav-link">
             Trips
+          </Link>
+          <Link to="/cart" className="nav-link">
+            Cart{count > 0 ? ` (${count})` : ''}
           </Link>
           {user && (
             <Link to="/bookings" className="nav-link">
