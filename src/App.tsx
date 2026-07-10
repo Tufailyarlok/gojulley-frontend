@@ -3,6 +3,7 @@ import { AuthProvider } from './auth'
 import { CartProvider } from './cart'
 import NavBar from './components/NavBar'
 import ScrollToTop from './components/ScrollToTop'
+import CartBar from './components/CartBar'
 import CartPage from './pages/CartPage'
 import GuidePage from './pages/GuidePage'
 import ListingsPage from './pages/ListingsPage'
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/bookings" element={<BookingsPage />} />
         </Routes>
+        <CartBar />
         </BrowserRouter>
       </CartProvider>
     </AuthProvider>

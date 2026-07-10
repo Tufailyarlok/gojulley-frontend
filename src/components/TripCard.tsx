@@ -8,7 +8,7 @@ const TRIP_THEMES = ['blue', 'amber', 'teal', 'green', 'purple'] as const
 
 export default function TripCard({ trip: t, index = 0 }: { trip: TripPackage; index?: number }) {
   return (
-    <article className="listing-card">
+    <Link to={`/trips/${t.id}`} className="listing-card" style={{ textDecoration: 'none', color: 'inherit' }}>
       <PhotoTile theme={TRIP_THEMES[index % TRIP_THEMES.length]} sun src={tripPhoto(t)} alt={t.title}>
         <span className="ph-route">{t.durationDays} days · {t.route}</span>
       </PhotoTile>
@@ -19,9 +19,9 @@ export default function TripCard({ trip: t, index = 0 }: { trip: TripPackage; in
           <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--ink)', fontVariantNumeric: 'tabular-nums' }}>
             {inr(t.pricePerPerson)}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--faint)' }}> /person</span>
           </div>
-          <Link to={`/trips/${t.id}`} className="btn btn-primary">View trip</Link>
+          <span className="btn btn-primary">View trip</span>
         </div>
       </div>
-    </article>
+    </Link>
   )
 }

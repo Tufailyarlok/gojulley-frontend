@@ -8,7 +8,7 @@ import type { Listing, ReviewSummary } from '../types'
 export default function ListingCard({ listing: l, summary }: { listing: Listing; summary?: ReviewSummary }) {
   const meta = TYPE_META[l.type]
   return (
-    <article className="listing-card">
+    <Link to={`/listings/${l.id}`} className="listing-card" style={{ textDecoration: 'none', color: 'inherit' }}>
       <PhotoTile theme={meta.theme} src={listingPhoto(l)} alt={l.title}>
         <span className="ph-badge" style={{ color: meta.ink }}>{meta.badge}</span>
       </PhotoTile>
@@ -34,9 +34,9 @@ export default function ListingCard({ listing: l, summary }: { listing: Listing;
               {l.quantity > 0 ? `${l.quantity} available` : 'Sold out'}
             </div>
           </div>
-          <Link to={`/listings/${l.id}`} className="btn btn-primary">View details</Link>
+          <span className="btn btn-primary">View details</span>
         </div>
       </div>
-    </article>
+    </Link>
   )
 }
