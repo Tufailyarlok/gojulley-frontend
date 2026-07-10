@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { getListings, getReviewSummaries, getTrips } from '../api'
+import { getListings, getReviewSummaries } from '../api'
 import ListingCard from '../components/ListingCard'
-import TripCard from '../components/TripCard'
 import { addDays, todayISO } from '../dates'
 import { placePhoto } from '../photos'
-import type { Listing, ReviewSummary, TripPackage } from '../types'
+import type { Listing, ReviewSummary } from '../types'
 
+// Build-your-own only. Ready-made tour packages live on /trips (the other path).
 const CATEGORIES = [
-  { key: 'packages', label: 'Tour packages' },
   { key: 'stays', label: 'Stays' },
   { key: 'bikes', label: 'Bike rentals' },
   { key: 'cars', label: 'Car rentals' },
@@ -20,14 +19,13 @@ const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, min
 export default function SearchPage() {
   const [params, setParams] = useSearchParams()
   const [listings, setListings] = useState<Listing[]>([])
-  const [trips, setTrips] = useState<TripPackage[]>([])
   const [summaries, setSummaries] = useState<Record<number, ReviewSummary>>({})
 
   const destination = params.get('destination') || ''
   const from = params.get('from') || ''
   const to = params.get('to') || ''
   const travellers = Number(params.get('travellers') || '2')
-  const tab = (params.get('tab') as Cat) || 'packages'
+  const tab = (params.get('tab') as Cat) || 'stays'
   const today = todayISO()
 
   function setParam(patch: Record<string, string>) {
@@ -38,7 +36,6 @@ export default function SearchPage() {
 
   useEffect(() => {
     getListings().then(setListings).catch(() => {})
-    getTrips().then(setTrips).catch(() => {})
     getReviewSummaries()
       .then((l) => setSummaries(Object.fromEntries(l.map((s) => [s.listingId, s]))))
       .catch(() => {})
@@ -49,11 +46,7 @@ export default function SearchPage() {
   const bikes = useMemo(() => listings.filter((l) => l.type === 'BIKE' && (!destination || l.location === destination)), [listings, destination])
   const cars = useMemo(() => listings.filter((l) => l.type === 'CAR' && (!destination || l.location === destination)), [listings, destination])
   const experiences = useMemo(() => listings.filter((l) => l.type === 'EXPERIENCE' && (!destination || l.location === destination)), [listings, destination])
-  const packages = useMemo(
-    () => (destination ? trips.filter((t) => t.route.toLowerCase().includes(destination.toLowerCase())) : trips),
-    [trips, destination],
-  )
-  const counts: Record<Cat, number> = { packages: packages.length, stays: stays.length, bikes: bikes.length, cars: cars.length, experiences: experiences.length }
+  const counts: Record<Cat, number> = { stays: stays.length, bikes: bikes.length, cars: cars.length, experiences: experiences.length }
 
   const listingGrid = (items: Listing[], emptyMsg: string) =>
     items.length ? (
@@ -132,16 +125,11 @@ export default function SearchPage() {
           ))}
         </div>
 
-        {tab === 'packages' &&
-          (packages.length ? (
-            <div style={gridStyle}>
-              {packages.map((t, i) => (
-                <TripCard key={t.id} trip={t} index={i} />
-              ))}
-            </div>
-          ) : (
-            <p style={{ color: 'var(--faint)' }}>No packages{destination ? ` for ${destination}` : ''} yet.</p>
-          ))}
+        <p className="section-sub" style={{ marginTop: -10, marginBottom: 22 }}>
+          Prefer everything handled for you?{' '}
+          <Link to="/trips" style={{ color: 'var(--navy)', fontWeight: 700 }}>Browse ready-made packages →</Link>
+        </p>
+
         {tab === 'stays' && listingGrid(stays, `No stays${destination ? ` in ${destination}` : ''} yet.`)}
         {tab === 'bikes' && listingGrid(bikes, 'No bikes available here yet.')}
         {tab === 'cars' && listingGrid(cars, 'No cars available here yet.')}
