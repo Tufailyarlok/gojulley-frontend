@@ -95,7 +95,7 @@ export default function ListingDetailPage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" disabled={soldOut} onClick={addToCart} style={{ padding: '11px 22px', fontSize: 15 }}>
+          <button className={`btn ${has(listing.id) ? 'btn-ok' : 'btn-primary'}`} disabled={soldOut} onClick={addToCart} style={{ padding: '11px 22px', fontSize: 15 }}>
             {soldOut ? 'Sold out' : has(listing.id) ? 'Added ✓ · add another' : 'Add to cart'}
           </button>
           <button className="btn btn-outline" disabled={soldOut} onClick={onBook} style={{ padding: '11px 22px', fontSize: 15 }}>
