@@ -10,7 +10,7 @@ import type { Listing, ReviewSummary } from '../types'
 const CATEGORIES = [
   { key: 'stays', label: 'Stays' },
   { key: 'bikes', label: 'Bike rentals' },
-  { key: 'cars', label: 'Car rentals' },
+  { key: 'cars', label: 'Taxi' },
   { key: 'experiences', label: 'Experiences' },
 ] as const
 type Cat = (typeof CATEGORIES)[number]['key']
