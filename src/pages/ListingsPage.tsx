@@ -15,11 +15,6 @@ export default function ListingsPage() {
     <>
       <header className="hero">
         <div className="hero-inner">
-          <img
-            src="/logo.png"
-            alt="GoJulley — Unforgettable Journeys"
-            style={{ width: 220, maxWidth: '62%', borderRadius: 14, marginBottom: 22, display: 'block', boxShadow: '0 6px 20px rgba(0,0,0,0.18)' }}
-          />
           <span className="hero-eyebrow">Stays · Rides · Whole trips · 11,500 ft</span>
           <h1>Your whole Ladakh trip, handled.</h1>
           <p>
