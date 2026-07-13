@@ -4,7 +4,10 @@ import { Link } from 'react-router-dom'
 // Operator is shown as the brand "GoJulley" (no personal name). Placeholders to
 // finalise: a registered legal-entity name (if any), refund/cancellation specifics,
 // and the governing-law city.
+import { useSeo } from '../useSeo'
+
 export default function TermsPage() {
+  useSeo({ title: 'Terms of Service | GoJulley', description: 'The terms for using GoJulley.', path: '/terms' })
   return (
     <div className="page" style={{ maxWidth: 760, paddingTop: '2.5rem', paddingBottom: '3rem', lineHeight: 1.6 }}>
       <span className="eyebrow">Legal</span>

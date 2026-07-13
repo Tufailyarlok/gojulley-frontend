@@ -15,7 +15,15 @@ const CATEGORIES = [
 type Cat = (typeof CATEGORIES)[number]['key']
 const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 } as const
 
+import { useSeo } from '../useSeo'
+
 export default function SearchPage() {
+  useSeo({
+    title: 'Browse Ladakh Stays, Bikes, Taxis & Services | GoJulley',
+    description:
+      'Find stays, self-drive bikes, taxis and trip services across Leh, Nubra and Pangong for your Ladakh trip.',
+    path: '/search',
+  })
   const [params, setParams] = useSearchParams()
   const [listings, setListings] = useState<Listing[]>([])
   const [summaries, setSummaries] = useState<Record<number, ReviewSummary>>({})

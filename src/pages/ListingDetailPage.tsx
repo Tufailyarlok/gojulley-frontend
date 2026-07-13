@@ -10,6 +10,8 @@ import { TYPE_DETAILS, TYPE_META, inr } from '../listingMeta'
 import { listingPhoto } from '../photos'
 import type { Listing } from '../types'
 
+import { useSeo } from '../useSeo'
+
 export default function ListingDetailPage() {
   const { id } = useParams()
   const { user } = useAuth()
@@ -20,6 +22,11 @@ export default function ListingDetailPage() {
   const [showBook, setShowBook] = useState(false)
   const [flash, setFlash] = useState<{ text: string; to: string; label: string } | null>(null)
   const [allListings, setAllListings] = useState<Listing[]>([])
+
+  useSeo({
+    title: listing ? `${listing.title} in ${listing.location} | GoJulley` : 'Listing | GoJulley',
+    description: listing?.description,
+  })
 
   useEffect(() => {
     if (!id) return

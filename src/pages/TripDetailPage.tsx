@@ -14,6 +14,8 @@ const todayISO = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
+import { useSeo } from '../useSeo'
+
 export default function TripDetailPage() {
   const { id } = useParams()
   const { user } = useAuth()
@@ -25,6 +27,11 @@ export default function TripDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
+
+  useSeo({
+    title: trip ? `${trip.title} — Ladakh Trip Package | GoJulley` : 'Ladakh Trip Package | GoJulley',
+    description: trip?.summary,
+  })
   const [coupon, setCoupon] = useState('')
   const [discount, setDiscount] = useState(0)
   const [couponMsg, setCouponMsg] = useState<string | null>(null)

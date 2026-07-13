@@ -102,7 +102,15 @@ function scrollToPlace(key: PlaceKey) {
   document.getElementById(`place-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
+import { useSeo } from '../useSeo'
+
 export default function GuidePage() {
+  useSeo({
+    title: 'Explore Ladakh — Places, Routes & Things to Do | GoJulley',
+    description:
+      'A guide to Ladakh — Leh, Nubra, Pangong and beyond: where to go, how to get around, and what you can do.',
+    path: '/guide',
+  })
   return (
     <div className="page" style={{ maxWidth: 1000, paddingTop: '2rem' }}>
       <span className="eyebrow">Explore Ladakh</span>
