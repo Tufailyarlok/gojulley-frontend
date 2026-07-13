@@ -1,7 +1,15 @@
 import { Link, useNavigate } from 'react-router-dom'
 
+import { useSeo } from '../useSeo'
+
 export default function ListingsPage() {
   const navigate = useNavigate()
+  useSeo({
+    title: 'GoJulley — Ladakh Trip Booking: Packages, Stays, Bikes & Taxis',
+    description:
+      'Book your whole Ladakh trip in one place — curated packages or individual stays, taxis, bikes and services across Leh, Nubra and Pangong.',
+    path: '/',
+  })
 
   return (
     <>

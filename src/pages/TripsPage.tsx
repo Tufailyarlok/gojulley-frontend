@@ -3,7 +3,15 @@ import { getTrips } from '../api'
 import TripCard from '../components/TripCard'
 import type { TripPackage } from '../types'
 
+import { useSeo } from '../useSeo'
+
 export default function TripsPage() {
+  useSeo({
+    title: 'Ladakh Trip Packages — Curated Leh, Nubra & Pangong Tours | GoJulley',
+    description:
+      'Ready-made Ladakh trip packages with stays, rides, permits and support — book the whole trip in one place.',
+    path: '/trips',
+  })
   const [trips, setTrips] = useState<TripPackage[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 

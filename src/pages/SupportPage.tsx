@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
 
+import { useSeo } from '../useSeo'
+
 export default function SupportPage() {
+  useSeo({ title: 'Support | GoJulley', description: 'Get help with GoJulley — bookings, payments, account and more.', path: '/support' })
   return (
     <div className="page" style={{ maxWidth: 760, paddingTop: '2.5rem', paddingBottom: '3rem', lineHeight: 1.6 }}>
       <span className="eyebrow">Help</span>

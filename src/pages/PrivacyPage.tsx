@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom'
 // NOTE: starter template — review (ideally with a professional) before store submission.
 // Operator is shown as the brand "GoJulley" (no personal name). If you register a
 // business entity later, put its legal name in the intro paragraph.
+import { useSeo } from '../useSeo'
+
 export default function PrivacyPage() {
+  useSeo({ title: 'Privacy Policy | GoJulley', description: 'How GoJulley handles your data.', path: '/privacy' })
   return (
     <div className="page" style={{ maxWidth: 760, paddingTop: '2.5rem', paddingBottom: '3rem', lineHeight: 1.6 }}>
       <span className="eyebrow">Legal</span>
