@@ -15,6 +15,6 @@ Folders
   cars/          matched by car model in the listing title
   stays/         matched by the stay's location (hotels & homestays)
   places/        matched by trip route / search destination
-  experiences/   camel safari, rafting, monastery, ATV, photography (Phase 3)
+  services/      matched by service keyword in the title (guide / photographer / mechanic / coordinator)
 
 After adding photos: commit + redeploy (I can do this for you).
