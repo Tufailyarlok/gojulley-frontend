@@ -1,0 +1,9 @@
+# 🚧 PRE-LAUNCH: demo data only — keep the whole site out of search engines.
+# AT LAUNCH (real content): replace the two lines below with:
+#     User-agent: *
+#     Allow: /
+#     Sitemap: https://gojulley.com/sitemap.xml
+# ...and remove the <meta name="robots" content="noindex,nofollow"> in index.html.
+
+User-agent: *
+Disallow: /
