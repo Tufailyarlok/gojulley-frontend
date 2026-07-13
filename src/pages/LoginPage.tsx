@@ -99,7 +99,7 @@ export default function LoginPage() {
       </div>
 
       <p style={{ fontSize: 12, color: 'var(--faint)', marginTop: 16, textAlign: 'center' }}>
-        Demo admin · admin@tripstack.local / admin123
+        Demo login · customer@tripstack.local / customer123
       </p>
     </div>
   )
