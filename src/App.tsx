@@ -5,6 +5,7 @@ import NavBar from './components/NavBar'
 import ScrollToTop from './components/ScrollToTop'
 import CartBar from './components/CartBar'
 import Footer from './components/Footer'
+import DemoBanner from './components/DemoBanner'
 import CartPage from './pages/CartPage'
 import GuidePage from './pages/GuidePage'
 import ListingsPage from './pages/ListingsPage'
@@ -26,6 +27,7 @@ export default function App() {
       <CartProvider>
         <BrowserRouter>
         <ScrollToTop />
+        <DemoBanner />
         <NavBar />
         <Routes>
           <Route path="/" element={<ListingsPage />} />

@@ -1,9 +1,5 @@
-# 🚧 PRE-LAUNCH: demo data only — keep the whole site out of search engines.
-# AT LAUNCH (real content): replace the two lines below with:
-#     User-agent: *
-#     Allow: /
-#     Sitemap: https://gojulley.com/sitemap.xml
-# ...and remove the <meta name="robots" content="noindex,nofollow"> in index.html.
-
+# Portfolio demo — indexing allowed (bookings are disabled in the app).
 User-agent: *
-Disallow: /
+Allow: /
+
+Sitemap: https://gojulley.com/sitemap.xml

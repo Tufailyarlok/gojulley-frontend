@@ -2,6 +2,15 @@
 // server (see vite.config.ts), so we use relative URLs here.
 
 import type { AdminStats, Booking, Coupon, Listing, ListingType, PublicCoupon, Review, ReviewSummary, TripBooking, TripPackage } from './types'
+import { DEMO_MODE } from './config'
+
+// In demo mode the catalog is sample data, so block anything that creates a
+// booking or takes a payment. Browsing/reading stays fully available.
+function blockIfDemo() {
+  if (DEMO_MODE) {
+    throw new ApiError('GoJulley is a demo — bookings and payments are disabled.', 403)
+  }
+}
 
 // Local dev: VITE_API_URL is unset, so calls go to '/api/v1' (Vite proxy).
 // Production: set VITE_API_URL to the backend's public URL at build time.
@@ -161,6 +170,7 @@ export async function createListing(token: string, data: NewListing): Promise<Li
 }
 
 export async function createBooking(token: string, data: NewBooking): Promise<Booking> {
+  blockIfDemo()
   return handle<Booking>(
     await authedFetch(token, `${BASE}/bookings`, { method: 'POST', body: JSON.stringify(data) }),
   )
@@ -196,6 +206,7 @@ export async function getTrip(id: number): Promise<TripPackage> {
 }
 
 export async function createTripBooking(token: string, data: NewTripBooking): Promise<TripBooking> {
+  blockIfDemo()
   return handle<TripBooking>(
     await authedFetch(token, `${BASE}/trip-bookings`, { method: 'POST', body: JSON.stringify(data) }),
   )
@@ -217,6 +228,7 @@ export async function cartCheckout(
   token: string,
   data: { startDate: string; days: number; items: { listingId: number; quantity: number }[] },
 ): Promise<TripBooking> {
+  blockIfDemo()
   return handle<TripBooking>(
     await authedFetch(token, `${BASE}/cart/checkout`, { method: 'POST', body: JSON.stringify(data) }),
   )
@@ -228,6 +240,7 @@ export async function createTripPaymentOrder(
   couponCode?: string,
   deposit = false,
 ): Promise<PaymentOrder> {
+  blockIfDemo()
   return handle<PaymentOrder>(
     await authedFetch(token, `${BASE}/trip-payments/order`, {
       method: 'POST',
@@ -364,6 +377,7 @@ export async function cancelBooking(token: string, id: number): Promise<Booking>
 
 // --- Payments (Razorpay) ---
 export async function createPaymentOrder(token: string, bookingId: number, couponCode?: string): Promise<PaymentOrder> {
+  blockIfDemo()
   return handle<PaymentOrder>(
     await authedFetch(token, `${BASE}/payments/order`, { method: 'POST', body: JSON.stringify({ bookingId, couponCode }) }),
   )
