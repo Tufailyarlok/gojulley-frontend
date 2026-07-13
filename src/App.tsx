@@ -4,6 +4,7 @@ import { CartProvider } from './cart'
 import NavBar from './components/NavBar'
 import ScrollToTop from './components/ScrollToTop'
 import CartBar from './components/CartBar'
+import Footer from './components/Footer'
 import CartPage from './pages/CartPage'
 import GuidePage from './pages/GuidePage'
 import ListingsPage from './pages/ListingsPage'
@@ -15,6 +16,9 @@ import TripsPage from './pages/TripsPage'
 import TripDetailPage from './pages/TripDetailPage'
 import SearchPage from './pages/SearchPage'
 import ListingDetailPage from './pages/ListingDetailPage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
+import SupportPage from './pages/SupportPage'
 
 export default function App() {
   return (
@@ -35,7 +39,11 @@ export default function App() {
           <Route path="/verify" element={<VerifyOtpPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/bookings" element={<BookingsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/support" element={<SupportPage />} />
         </Routes>
+        <Footer />
         <CartBar />
         </BrowserRouter>
       </CartProvider>
