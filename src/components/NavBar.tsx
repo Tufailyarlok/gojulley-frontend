@@ -10,7 +10,11 @@ export default function NavBar() {
     <nav className="nav">
       <div className="nav-inner">
         <Link to="/" className="brand">
-          <span className="brand-mark">G</span>
+          <img
+            src="/favicon.png"
+            alt="GoJulley"
+            style={{ width: 34, height: 34, objectFit: 'contain', display: 'block', marginRight: 8 }}
+          />
           GoJulley
         </Link>
         <span className="brand-sub">· Ladakh trips</span>
