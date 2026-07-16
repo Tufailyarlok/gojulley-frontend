@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { ApiError, login as apiLogin, signup as apiSignup } from '../api'
+import { ApiError, login as apiLogin, requestLoginOtp, signup as apiSignup } from '../api'
 import { useAuth } from '../auth'
 
 export default function LoginPage() {
@@ -25,9 +25,14 @@ export default function LoginPage() {
         await apiSignup(email, password, name)
         navigate('/verify', { state: { email } }) // go enter the emailed code
       } else {
-        const user = await apiLogin(email, password)
-        setUser(user)
-        navigate(user.role === 'ADMIN' ? '/admin' : '/')
+        const res = await apiLogin(email, password)
+        // 2FA on: password was right, but a login code was emailed — go enter it.
+        if (res.twoFactorRequired) {
+          navigate('/login-otp', { state: { email, reason: '2fa' } })
+          return
+        }
+        setUser({ token: res.token!, email: res.email, name: res.name!, role: res.role! })
+        navigate(res.role === 'ADMIN' ? '/admin' : '/')
       }
     } catch (err) {
       // Logging into an unverified account returns 403 -> send them to verify.
@@ -36,6 +41,24 @@ export default function LoginPage() {
       } else {
         setError((err as Error).message)
       }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Passwordless: email a one-time login code instead of using a password.
+  async function loginWithCode() {
+    setError(null)
+    if (!email) {
+      setError('Enter your email first, then choose "Email me a login code".')
+      return
+    }
+    setBusy(true)
+    try {
+      await requestLoginOtp(email)
+      navigate('/login-otp', { state: { email, reason: 'passwordless' } })
+    } catch (err) {
+      setError((err as Error).message)
     } finally {
       setBusy(false)
     }
@@ -83,6 +106,21 @@ export default function LoginPage() {
             {busy ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Sign up'}
           </button>
         </form>
+
+        {mode === 'login' && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, fontSize: 14 }}>
+            <button type="button" className="btn-link" disabled={busy} onClick={loginWithCode}>
+              Email me a login code
+            </button>
+            <button
+              type="button"
+              className="btn-link"
+              onClick={() => navigate('/forgot-password', { state: { email } })}
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
 
         <p style={{ fontSize: 14, marginTop: 18, color: 'var(--muted)' }}>
           {mode === 'login' ? "No account? " : 'Have an account? '}

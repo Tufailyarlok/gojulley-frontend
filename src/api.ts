@@ -28,6 +28,25 @@ export interface SignupResponse {
   message: string
 }
 
+// Login can return either a completed session (token present) or a 2FA
+// challenge (token null, twoFactorRequired true) — the user then completes an
+// emailed LOGIN code via verifyLoginOtp.
+export interface LoginResponse {
+  token: string | null
+  email: string
+  name: string | null
+  role: 'CUSTOMER' | 'ADMIN' | null
+  twoFactorRequired: boolean
+}
+
+export interface Me {
+  email: string
+  name: string
+  role: 'CUSTOMER' | 'ADMIN'
+  verified: boolean
+  twoFactorEnabled: boolean
+}
+
 export interface NewListing {
   type: ListingType
   title: string
@@ -139,9 +158,50 @@ export async function getListing(id: number): Promise<Listing> {
   return handle<Listing>(await fetch(`${BASE}/listings/${id}`))
 }
 
-export async function login(email: string, password: string): Promise<AuthUser> {
-  return handle<AuthUser>(
+export async function login(email: string, password: string): Promise<LoginResponse> {
+  return handle<LoginResponse>(
     await fetch(`${BASE}/auth/login`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email, password }) }),
+  )
+}
+
+// --- Passwordless login + 2FA second factor (share the same LOGIN code) ---
+export async function requestLoginOtp(email: string): Promise<SignupResponse> {
+  return handle<SignupResponse>(
+    await fetch(`${BASE}/auth/login-otp/request`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email }) }),
+  )
+}
+
+export async function verifyLoginOtp(email: string, code: string): Promise<AuthUser> {
+  return handle<AuthUser>(
+    await fetch(`${BASE}/auth/login-otp/verify`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email, code }) }),
+  )
+}
+
+// --- Forgot / reset password ---
+export async function forgotPassword(email: string): Promise<SignupResponse> {
+  return handle<SignupResponse>(
+    await fetch(`${BASE}/auth/forgot-password`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email }) }),
+  )
+}
+
+export async function resetPassword(email: string, code: string, newPassword: string): Promise<AuthUser> {
+  return handle<AuthUser>(
+    await fetch(`${BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: jsonHeaders,
+      body: JSON.stringify({ email, code, newPassword }),
+    }),
+  )
+}
+
+// --- Account: profile + 2FA toggle ---
+export async function getMe(token: string): Promise<Me> {
+  return handle<Me>(await authedFetch(token, `${BASE}/users/me`))
+}
+
+export async function setTwoFactor(token: string, enabled: boolean): Promise<Me> {
+  return handle<Me>(
+    await authedFetch(token, `${BASE}/users/me/2fa`, { method: 'PUT', body: JSON.stringify({ enabled }) }),
   )
 }
 

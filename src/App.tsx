@@ -11,6 +11,8 @@ import GuidePage from './pages/GuidePage'
 import ListingsPage from './pages/ListingsPage'
 import LoginPage from './pages/LoginPage'
 import VerifyOtpPage from './pages/VerifyOtpPage'
+import LoginOtpPage from './pages/LoginOtpPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import AdminPage from './pages/AdminPage'
 import BookingsPage from './pages/BookingsPage'
 import TripsPage from './pages/TripsPage'
@@ -39,6 +41,8 @@ export default function App() {
           <Route path="/trips/:id" element={<TripDetailPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/verify" element={<VerifyOtpPage />} />
+          <Route path="/login-otp" element={<LoginOtpPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/bookings" element={<BookingsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
