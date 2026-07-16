@@ -13,6 +13,7 @@ import {
   verifyTripPayment,
 } from '../api'
 import { useAuth } from '../auth'
+import SecurityCard from '../components/SecurityCard'
 import { payWithRazorpay } from '../razorpay'
 import type { Booking, PublicCoupon, TripBooking } from '../types'
 
@@ -166,6 +167,8 @@ export default function BookingsPage() {
           <Link to="/" className="btn btn-outline">Listings</Link>
         </div>
       </div>
+
+      <SecurityCard />
 
       {loading && <p style={{ color: 'var(--muted)' }}>Loading…</p>}
       {error && <div className="alert alert-error" style={{ marginBottom: 14 }}>{error}</div>}
