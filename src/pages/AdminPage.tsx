@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from
 import { Link } from 'react-router-dom'
 import {
   adminCancelBooking,
+  adminConfirmBooking,
   createCoupon,
   createListing,
   createTripPackage,
@@ -42,6 +43,27 @@ const TABS: { key: Tab; label: string }[] = [
 ]
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
+
+const PAGE_SIZE = 10
+
+// Simple client-side pager for the admin tables (all rows already load at once).
+function Pager({ page, total, onPage }: { page: number; total: number; onPage: (p: number) => void }) {
+  const pages = Math.ceil(total / PAGE_SIZE)
+  if (pages <= 1) return null
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', justifyContent: 'flex-end', marginTop: 12 }}>
+      <button className="btn btn-outline" disabled={page <= 0} onClick={() => onPage(page - 1)}>
+        Prev
+      </button>
+      <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+        Page {page + 1} of {pages}
+      </span>
+      <button className="btn btn-outline" disabled={page >= pages - 1} onClick={() => onPage(page + 1)}>
+        Next
+      </button>
+    </div>
+  )
+}
 
 function Gate({ children }: { children: ReactNode }) {
   return <div style={{ maxWidth: 600, margin: '3rem auto', padding: '0 1rem', color: 'var(--muted)' }}>{children}</div>
@@ -91,6 +113,7 @@ function BookingsTab({ token }: { token: string }) {
   const [bookings, setBookings] = useState<Booking[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<number | null>(null)
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
     getAllBookings(token)
@@ -111,9 +134,25 @@ function BookingsTab({ token }: { token: string }) {
     }
   }
 
+  async function confirm(id: number) {
+    setBusyId(id)
+    setError(null)
+    try {
+      const updated = await adminConfirmBooking(token, id)
+      setBookings((bs) => bs?.map((b) => (b.id === id ? updated : b)) ?? null)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   if (!bookings && error) return <p className="alert alert-error">{error}</p>
   if (!bookings) return <p style={{ color: 'var(--muted)' }}>Loading…</p>
   if (bookings.length === 0) return <p style={{ color: 'var(--muted)' }}>No bookings yet.</p>
+
+  const start = page * PAGE_SIZE
+  const pageRows = bookings.slice(start, start + PAGE_SIZE)
 
   return (
     <>
@@ -133,7 +172,7 @@ function BookingsTab({ token }: { token: string }) {
             </tr>
           </thead>
           <tbody>
-            {bookings.map((b) => (
+            {pageRows.map((b) => (
               <tr key={b.id}>
                 <td>{b.id}</td>
                 <td>{b.listingTitle}</td>
@@ -146,7 +185,12 @@ function BookingsTab({ token }: { token: string }) {
                 <td>
                   <StatusBadge status={b.status} />
                 </td>
-                <td>
+                <td style={{ whiteSpace: 'nowrap' }}>
+                  {b.status === 'PENDING' && (
+                    <button className="btn btn-ok" disabled={busyId === b.id} onClick={() => confirm(b.id)} style={{ marginRight: 6 }}>
+                      {busyId === b.id ? '…' : 'Confirm'}
+                    </button>
+                  )}
                   {b.status !== 'CANCELLED' && (
                     <button className="btn btn-danger" disabled={busyId === b.id} onClick={() => cancel(b.id)}>
                       {busyId === b.id ? '…' : 'Cancel'}
@@ -158,6 +202,7 @@ function BookingsTab({ token }: { token: string }) {
           </tbody>
         </table>
       </div>
+      <Pager page={page} total={bookings.length} onPage={setPage} />
     </>
   )
 }
@@ -170,6 +215,7 @@ function ListingsTab({ token }: { token: string }) {
   const [msg, setMsg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [page, setPage] = useState(0)
 
   function reload() {
     getListings()
@@ -340,7 +386,7 @@ function ListingsTab({ token }: { token: string }) {
               </tr>
             </thead>
             <tbody>
-              {listings.map((l) => (
+              {listings.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE).map((l) => (
                 <tr key={l.id}>
                   <td>{l.id}</td>
                   <td>
@@ -364,6 +410,7 @@ function ListingsTab({ token }: { token: string }) {
           </table>
         </div>
       )}
+      {listings && <Pager page={page} total={listings.length} onPage={setPage} />}
     </>
   )
 }

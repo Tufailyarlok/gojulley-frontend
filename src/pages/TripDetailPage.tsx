@@ -6,6 +6,7 @@ import { payWithRazorpay } from '../razorpay'
 import { tripPhoto } from '../photos'
 import ServiceStrip from '../components/ServiceStrip'
 import DateField from '../components/DateField'
+import Reviews from '../components/Reviews'
 import type { Listing, PublicCoupon, TripPackage } from '../types'
 
 const inr = (n: number) => `₹${n.toLocaleString('en-IN')}`
@@ -280,6 +281,10 @@ export default function TripDetailPage() {
               </button>
             </>
           )}
+        </div>
+
+        <div className="card">
+          <Reviews tripId={trip.id} />
         </div>
       </div>
 

@@ -74,7 +74,7 @@ export interface TripBooking {
 
 export interface Review {
   id: number
-  listingId: number
+  listingId: number | null // null for trip reviews
   userName: string
   rating: number
   comment: string | null

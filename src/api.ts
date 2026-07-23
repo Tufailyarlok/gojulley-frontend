@@ -416,6 +416,19 @@ export async function createReview(
   )
 }
 
+export async function getTripReviews(tripId: number): Promise<Review[]> {
+  return handle<Review[]>(await fetch(`${BASE}/reviews/trip?tripId=${tripId}`))
+}
+
+export async function createTripReview(
+  token: string,
+  data: { tripId: number; rating: number; comment: string },
+): Promise<Review> {
+  return handle<Review>(
+    await authedFetch(token, `${BASE}/reviews/trip`, { method: 'POST', body: JSON.stringify(data) }),
+  )
+}
+
 // --- Admin dashboard ---
 export async function getAdminStats(token: string): Promise<AdminStats> {
   return handle<AdminStats>(await authedFetch(token, `${BASE}/admin/stats`))
@@ -427,6 +440,10 @@ export async function getAllBookings(token: string): Promise<Booking[]> {
 
 export async function adminCancelBooking(token: string, id: number): Promise<Booking> {
   return handle<Booking>(await authedFetch(token, `${BASE}/admin/bookings/${id}/cancel`, { method: 'POST' }))
+}
+
+export async function adminConfirmBooking(token: string, id: number): Promise<Booking> {
+  return handle<Booking>(await authedFetch(token, `${BASE}/admin/bookings/${id}/confirm`, { method: 'POST' }))
 }
 
 export async function cancelBooking(token: string, id: number): Promise<Booking> {
