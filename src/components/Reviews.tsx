@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
-import { createReview, getReviews } from '../api'
+import { createReview, createTripReview, getReviews, getTripReviews } from '../api'
 import { useAuth } from '../auth'
 import Stars from './Stars'
 import type { Review } from '../types'
 
-// Reviews list + average + write-a-review form for a listing.
-// Used on the listing detail page (and reusable anywhere).
-export default function Reviews({ listingId }: { listingId: number }) {
+// Reviews list + average + write-a-review form for a listing OR a trip package.
+// Pass exactly one of `listingId` / `tripId`.
+type Props = { listingId: number; tripId?: never } | { tripId: number; listingId?: never }
+
+export default function Reviews(props: Props) {
+  const isTrip = props.tripId != null
+  const targetId = isTrip ? props.tripId! : props.listingId!
   const { user } = useAuth()
   const [reviews, setReviews] = useState<Review[]>([])
   const [rating, setRating] = useState(0)
@@ -16,10 +20,9 @@ export default function Reviews({ listingId }: { listingId: number }) {
   const [posted, setPosted] = useState(false)
 
   useEffect(() => {
-    getReviews(listingId)
-      .then(setReviews)
-      .catch(() => {})
-  }, [listingId])
+    const load = isTrip ? getTripReviews(targetId) : getReviews(targetId)
+    load.then(setReviews).catch(() => {})
+  }, [isTrip, targetId])
 
   const avg = reviews.length ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0
 
@@ -28,7 +31,9 @@ export default function Reviews({ listingId }: { listingId: number }) {
     setBusy(true)
     setError(null)
     try {
-      const r = await createReview(user.token, { listingId, rating, comment })
+      const r = isTrip
+        ? await createTripReview(user.token, { tripId: targetId, rating, comment })
+        : await createReview(user.token, { listingId: targetId, rating, comment })
       setReviews((rs) => [r, ...rs])
       setPosted(true)
     } catch (err) {
