@@ -38,7 +38,7 @@ export default function ListingCard({ listing: l, summary }: { listing: Listing;
               {inr(l.pricePerDay)}<span style={{ fontSize: 12, fontWeight: 400, color: 'var(--faint)' }}>/day</span>
             </div>
             <div style={{ fontSize: 12, fontWeight: 700, color: l.quantity > 0 ? 'var(--ok)' : 'var(--danger)' }}>
-              {l.quantity > 0 ? `${l.quantity} available` : 'Sold out'}
+              {l.quantity > 0 ? 'Available' : 'Unavailable'}
             </div>
           </div>
           <span className="btn btn-primary">View details</span>

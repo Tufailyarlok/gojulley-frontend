@@ -158,6 +158,20 @@ export async function getListing(id: number): Promise<Listing> {
   return handle<Listing>(await fetch(`${BASE}/listings/${id}`))
 }
 
+export interface Availability {
+  listingId: number
+  start: string
+  end: string
+  capacity: number
+  available: number
+}
+
+/** How many units of a listing are free for the [start, end) window (public). */
+export async function getAvailability(id: number, start: string, end: string): Promise<Availability> {
+  const qs = new URLSearchParams({ start, end })
+  return handle<Availability>(await fetch(`${BASE}/listings/${id}/availability?${qs.toString()}`))
+}
+
 export async function login(email: string, password: string): Promise<LoginResponse> {
   return handle<LoginResponse>(
     await fetch(`${BASE}/auth/login`, { method: 'POST', headers: jsonHeaders, body: JSON.stringify({ email, password }) }),

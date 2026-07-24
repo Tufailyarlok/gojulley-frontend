@@ -98,7 +98,7 @@ export default function ListingDetailPage() {
             {inr(listing.pricePerDay)}<span style={{ fontSize: 13, fontWeight: 400, color: 'var(--faint)' }}> /day</span>
           </div>
           <div style={{ fontSize: 13, fontWeight: 700, color: soldOut ? 'var(--danger)' : 'var(--ok)' }}>
-            {soldOut ? 'Sold out' : `${listing.quantity} available`}
+            {soldOut ? 'Unavailable' : 'Available — pick dates to check'}
           </div>
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
