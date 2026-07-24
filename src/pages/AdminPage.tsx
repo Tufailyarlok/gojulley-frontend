@@ -92,7 +92,7 @@ function OverviewTab({ token }: { token: string }) {
     { label: 'Confirmed', value: stats.confirmedBookings },
     { label: 'Revenue (confirmed)', value: inr(stats.confirmedRevenue) },
     { label: 'Listings', value: stats.totalListings },
-    { label: 'Units available', value: stats.unitsAvailable },
+    { label: 'Total capacity', value: stats.unitsAvailable },
     { label: 'Pending payments', value: stats.pendingPayments },
   ]
 
